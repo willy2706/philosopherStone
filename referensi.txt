@@ -1,0 +1,12 @@
+referensi Python Socket Server:
+https://docs.python.org/2/library/socketserver.html
+
+tutorial Python TCP socket:
+http://www.binarytides.com/python-socket-programming-tutorial/
+http://www.binarytides.com/python-socket-server-code-example/
+http://pymotw.com/2/socket/tcp.html
+
+Bonus
+=====
+tutorial Python UDP Socket:
+http://www.binarytides.com/programming-udp-sockets-in-python/

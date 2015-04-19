@@ -16,7 +16,8 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             if self.containsValidJSON(everything):
                 break
 
-        mJSON = json.load(everything)
+        print 'Everthing:', everything
+        mJSON = json.loads(everything)
 
         # process the request
         toSend = {}
@@ -28,12 +29,13 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 serverLogic.signup(mJSON['username'], mJSON['password'])
                 toSend['status'] = 'ok'
                 
-            except UsernameException as e:
+            except sister.UsernameException as e:
                 toSend['status'] = 'fail'
                 toSend['description'] = str(e)
                 
-            except:
+            except Exception as e:
                 toSend['status'] = 'error'
+                toSend['description'] = str(e)
             
         elif method == 'login':
             # process login
@@ -45,11 +47,11 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['y'] = y
                 toSend['time'] = time
 
-            except UsernameException as e:
+            except sister.UsernameException as e:
                 toSend['status'] = 'fail'
                 toSend['description'] = str(e)
                 
-            except as e:
+            except Exception as e:
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
 

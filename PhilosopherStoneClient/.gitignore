@@ -8,13 +8,3 @@ dist/
 nbdist/
 nbactions.xml
 nb-configuration.xml
-
-##########################
-## Java
-##########################
-*.class
-.mtj.tmp/
-*.jar
-*.war
-*.ear
-hs_err_pid*

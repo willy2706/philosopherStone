@@ -23,7 +23,7 @@ public class SignUpRequest extends Request{
     }
     
     @Override
-    public String toJsonString() {
+    public String toString() {
         Map obj = new LinkedHashMap();
         
         obj.put("method", method);

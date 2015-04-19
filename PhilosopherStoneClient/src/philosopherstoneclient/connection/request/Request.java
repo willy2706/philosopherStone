@@ -18,6 +18,6 @@ public abstract class Request {
         return method;
     }
     
-    public abstract String toJsonString();
+    public abstract String toString();
     
 }

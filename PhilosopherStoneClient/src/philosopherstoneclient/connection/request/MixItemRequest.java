@@ -14,12 +14,14 @@ import org.json.simple.JSONValue;
  *
  * @author winsxx
  */
-public class LoginRequest extends Request{
-    public String username;
-    public String password;
+public class MixItemRequest extends Request{
     
-    public LoginRequest(){
-        method = "login";
+    public String token;
+    public int item1;
+    public int item2;
+
+    public MixItemRequest() {
+        method = "mixitem";
     }
     
     @Override
@@ -27,8 +29,9 @@ public class LoginRequest extends Request{
         Map obj = new LinkedHashMap();
         
         obj.put("method", method);
-        obj.put("username", username);
-        obj.put("password", password);
+        obj.put("token", token);
+        obj.put("item1", item1);
+        obj.put("item2", item2);
         
         String jsonString = JSONValue.toJSONString(obj);
         

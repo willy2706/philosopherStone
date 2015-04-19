@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import philosopherstoneclient.connection.JsonSocket;
+import philosopherstoneclient.connection.request.MixItemRequest;
 import philosopherstoneclient.connection.request.SignUpRequest;
 
 /**
@@ -26,7 +27,7 @@ public class PhilosopherStoneClient {
         sur.password = "1434325";
         sur.username = "kelvahn";
         
-        String json = sur.toJsonString();
+        String json = sur.toString();
         System.out.println(json);
         
         JsonSocket js = new JsonSocket("167.205.32.46", 8025, 5000);
@@ -64,6 +65,12 @@ public class PhilosopherStoneClient {
             }
         }
         System.out.println("Done");
+        
+        MixItemRequest mir = new MixItemRequest();
+        mir.item1 = 0;
+        mir.item2 = 1;
+        mir.token = "agagargarha";
+        System.out.println(mir);
     }
     
 }

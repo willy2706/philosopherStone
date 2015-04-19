@@ -14,6 +14,7 @@ import philosopherstoneclient.connection.JsonSocket;
 import philosopherstoneclient.connection.request.LoginRequest;
 import philosopherstoneclient.connection.request.MixItemRequest;
 import philosopherstoneclient.connection.request.SignUpRequest;
+import philosopherstoneclient.connection.response.InventoryResponse;
 import philosopherstoneclient.connection.response.LoginResponse;
 import philosopherstoneclient.connection.response.ResponseErrorException;
 import philosopherstoneclient.connection.response.ResponseFailException;
@@ -31,7 +32,7 @@ public class PhilosopherStoneClient {
         String password = "1434325";
         String username = "kelvahn";
         
-        JsonSocket js = new JsonSocket("167.205.32.46", 8025, 5000);
+        JsonSocket js = new JsonSocket("0.0.0.0", 8025, 5000);
         for(int i=0; i<1; i++){
             try {
                 System.out.println("Start write");
@@ -44,8 +45,11 @@ public class PhilosopherStoneClient {
             try {
                 System.out.println("Start write");
                 LoginRequest lr = new LoginRequest();
+                /* SignUpRequest sur = new SignUpRequest(); */
+                
                 lr.password = password;
                 lr.username = username;
+                System.out.println(lr);
                 js.write(lr.toString());
                 System.out.println("Done write");
             } catch (IOException ex) {
@@ -80,6 +84,17 @@ public class PhilosopherStoneClient {
         }
         System.out.println("Done");
         
+        String msk = "{\"status\":\"ok\", \"inventory\":[1,2,3,4,5,1,2,3,4,5]}";
+        try {
+            InventoryResponse ir = new InventoryResponse(msk);
+            long[] tes = ir.getInventory();
+            for (long l : tes) {
+                System.out.println(l);
+            }
+        } catch (ParseException | ResponseFailException | ResponseErrorException ex) {
+            Logger.getLogger(PhilosopherStoneClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         
     }
     

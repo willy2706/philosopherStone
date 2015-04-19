@@ -41,6 +41,8 @@ class SisterServerLogic():
 
             unixTime = calendar.timegm(time.gmtime())
             token = md5.new(name+password+str(unixTime))
+
+            self.loggedUser[token] = name
             return (token, 0, 0, unixTime)
             
         else:

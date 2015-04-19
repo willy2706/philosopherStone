@@ -24,7 +24,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         method = mJSON['method']
         
         if method == 'signup':
-            # prcess signup
+            # process signup
             try:
                 serverLogic.signup(mJSON['username'], mJSON['password'])
                 toSend['status'] = 'ok'
@@ -51,6 +51,38 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'fail'
                 toSend['description'] = str(e)
                 
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
+        elif method == 'map':
+            # process map request
+            try:
+                name, width, height = serverLogic.getMap(mJSON['token'])
+                toSend['status'] = 'ok'
+                toSend['name'] = name
+                toSend['width'] = width
+                toSend['height'] = height
+
+            except sister.TokenException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+            
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
+        elif method == 'tradebox':
+            # process tradebox request
+            try:
+                offers = serverLogic.tradebox(mJSON['token'])
+                toSend['status'] = 'ok'
+                toSend['offers'] = offers
+
+            except sister.TokenException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
             except Exception as e:
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)

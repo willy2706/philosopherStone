@@ -15,11 +15,11 @@ Implementasi:
 03. Login Eric    : 100%, Eric
 04. Inventory     :
 05. MixItem       :
-06. Map           :
+06. Map           : 100%, Eric
 07. Move          :
 08. Field         :
 09. Offer         :
-10. Tradebox      :
+10. Tradebox      : 100%, Eric
 11. SendFind      :
 12. FindOffer     :
 13. SendAccept    :
@@ -29,8 +29,8 @@ Implementasi:
 
 Pembagian kerja:
 ----------------
-Eric   : 2 3 6 10 13 14
-Willy  : 1 4 5 9 12 15
+Eric   : 2 3 6 9 10 14
+Willy  : 1 4 5 12 13 15
 Aurelia: 7 8 11 16
 
 camelCase:

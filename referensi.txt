@@ -1,10 +1,20 @@
+referensi Python JSON library:
+https://docs.python.org/2/library/json.html
+
 referensi Python Socket Server:
 https://docs.python.org/2/library/socketserver.html
+
+referensi Python Socket:
+https://docs.python.org/2/library/socket.html
 
 tutorial Python TCP socket:
 http://www.binarytides.com/python-socket-programming-tutorial/
 http://www.binarytides.com/python-socket-server-code-example/
 http://pymotw.com/2/socket/tcp.html
+
+tutorial Python SocketServer
+http://pymotw.com/2/SocketServer/
+http://kmkeen.com/socketserver/
 
 Bonus
 =====

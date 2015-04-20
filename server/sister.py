@@ -46,6 +46,7 @@ Instance objects:
 -> loggedUser: map of token @ username
 -> gameMap
 -> allOffers: map offerToken @ username
+-> salt: string appended to be hashed
 '''
 class SisterServerLogic():
     def printUser(self):
@@ -69,6 +70,7 @@ class SisterServerLogic():
         self.registeredUser = {}
         self.loggedUser = {}
         self.loadMap('map.json')
+        self.salt = 'mi0IUsW4'
 
     '''
     Signup a user
@@ -94,10 +96,8 @@ class SisterServerLogic():
                 raise UsernameException('username/password combination is not found')
 
             unixTime = calendar.timegm(time.gmtime())
-            token = md5.new(name+password+str(unixTime)).hexdigest()
+            token = md5.new(name).hexdigest()
 
-            # TODO: double login?
-            # TODO: logout?
             self.loggedUser[token] = name
             self.registeredUser[name]['loggedOn'] = True
             # TODO: x, y itu apa? posisi dia sebelumnya ya?
@@ -157,8 +157,14 @@ class SisterServerLogic():
             if not userOffers:
                 userOffers = {}
 
-            # TODO: generate offer based on offers, time, and server salt
-            offerToken = 'gbhotel'
+            # generate offer
+            unixTime = calendar.timegm(time.gmtime())
+            lOfferToken = [token, str(unixTime)]
+            lOfferToken += [salt, str(random.randint(-2147483648, 2147483647))]
+            lOfferToken += [chr(ord('A')+offered_item), str(n1)]
+            lOfferToken += [chr(ord('A')+demanded_item), str(n2)]
+            offerToken = md5.new(''.join(lOfferToken)).hexdigest()
+            
             userOffers[offerToken] = [offered_item, n1, demanded_item, n2, True]
             allOffers[offerToken] = username
             

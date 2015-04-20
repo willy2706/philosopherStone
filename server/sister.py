@@ -46,8 +46,7 @@ class SisterServerLogic():
     def __init__(self):
         conn = sqlite3.connect('sister.db') #otomatis bikin kalau ga ada
         c = conn.cursor()
-        c.execute("CREATE TABLE IF NOT EXISTS users (username VARCHAR(255), password VARCHAR(255), PRIMARY KEY(username))")
-        c.execute("CREATE TABLE IF NOT EXISTS inventories (R11 INT, R12 INT, R13 INT, R14 INT, R21 INT, R22 INT, R23 INT, R31 INT, R32 INT, R41 INT, username VARCHAR(255), FOREIGN KEY (username) REFERENCES USERS(username))")
+        c.execute("CREATE TABLE IF NOT EXISTS users (username VARCHAR(255), password VARCHAR(255), R11 INT, R12 INT, R13 INT, R14 INT, R21 INT, R22 INT, R23 INT, R31 INT, R32 INT, R41 INT, PRIMARY KEY(username))")
         # try:
         try:
             c.execute("INSERT INTO users(username, password) VALUES ('willy', '1234')")

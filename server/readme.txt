@@ -20,18 +20,18 @@ Implementasi:
 08. Field         : 
 09. Offer         : 80%, Eric belum dihubungkan dengan database dan belum ditest
 10. Tradebox      : 90%, Eric belum ditest
-11. SendFind      :
+11. SendFind      : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 12. FindOffer     :
-13. SendAccept    :
+13. SendAccept    : 
 14. Accept        : 80%, Eric belum dihubungkan dengan database dan belum ditest
-15. FetchItem     :
-16. CancelOffer   :
+15. FetchItem     : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
+16. CancelOffer   : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 
 Pembagian kerja:
 ----------------
 Eric   : 2 3 6 9 10 14
-Willy  : 1 4 5 12 13 15
-Aurelia: 7 8 11 16
+Willy  : 1 4 5 13 15 16
+Aurelia: 7 8 11 12
 
 camelCase:
 ----------

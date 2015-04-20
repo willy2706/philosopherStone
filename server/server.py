@@ -132,12 +132,46 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 res = serverLogic.mixItem(mJSON['token'],mJSON['item1'],mJSON['item2'])
                 toSend['status'] = 'ok'
                 toSend['item'] = res
-            except (sister.TokenException, sister.MixtureException) as e :
+            except (sister.TokenException, sister.MixtureException, sister.IndexItemException) as e :
                 toSend['status'] = 'fail'
                 toSend['description'] = e
             except Exception as e:
                 toSend['status'] = 'error'
                 toSend['description'] = 'e'
+
+        elif method == 'sendfind':
+            try:
+                res = serverLogic.sendFind(mJSON['method'], mJSON['token'], mJSON['item'])
+                toSend['status'] = 'ok'
+                toSend['offers'] = res
+            except (sister.TokenException, sister.IndexItemException) as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = e
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = e
+
+        elif method == 'fetchitem':
+            try:
+                serverLogic.fetchItem(mJSON['method'], mJSON['token'], mJSON['offer_token'])
+                toSend['status'] = 'ok'
+            except (sister.TokenException, sister.LogicException) as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = e
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = e
+
+        elif method == 'canceloffer':
+            try:
+                serverLogic.cancelOffer(mJSON['method'], mJSON['token'], mJSON['offer_token'])
+                toSend['status'] = 'ok'
+            except (sister.TokenException, sister.LogicException) as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = e
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = e
 
         # send response to client
         sToSend = json.dumps(toSend)

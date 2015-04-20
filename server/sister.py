@@ -52,6 +52,15 @@ class IndexItemException(Exception):
         return self.value
 
 '''
+The Exception raised when the server is having problem with logic.
+'''
+class LogicException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return self.value
+
+'''
 The Logic of Server.
 Instance objects:
 -> registeredUser: map of username @ map
@@ -262,6 +271,10 @@ class SisterServerLogic():
             raise OfferException('offer is not available')
     
 
+    '''
+    Get the inventory of a user.
+    throwable: IndexItemException.
+    '''
     def getInventory(self, token): #belum testing
         username = self.loggedUser.get(token)
         if username:
@@ -271,6 +284,10 @@ class SisterServerLogic():
         else:
             raise TokenException('invalid token')
 
+    '''
+    Mix 2 categories with 3 each to 1
+    throwable: IndexItemException, TokenException, MixtureException.
+    '''
     def mixItem (self, token, item1, item2):
         username = self.loggedUser.get(token)
         if username:
@@ -292,3 +309,69 @@ class SisterServerLogic():
                 return numItemRes
         else:
             raise TokenException('invalid token')
+
+    '''
+    Mix 2 categories with 3 each to 1
+    throwable: IndexItemException, TokenException, MixtureException.
+    '''
+    def sendFind (self, token, item):
+        username = self.loggedUser.get(token)
+        retTup = {}
+        if username:
+            self.validateIndexItem(item1)
+            for un, m in self.registeredUser:
+                if un != username: #kan mau nya find offer yang bukan punya dia
+                    offerLists = m['offers']
+                    for offerToken, offers in offerLists:
+                        if (offers[0] == item and offers[4] == True):
+                            tup1 = offers + (key,)
+                            retTup = retTup + (tup,)
+                    return retTup
+        else:
+            raise TokenException('invalid token')
+
+    def fetchItem(self, token, offer_token):
+        username = self.loggedUser.get(token)
+        username_offer = self.allOffers.get(offer_token)
+
+        if username:
+            if username_offer:
+                if username != username_offer:
+                    raise LogicException('you do not offer the item. Logic error?')
+                if self.registeredUser[username]['offers'][offerToken][4]:
+                    raise LogicException('you cannot fetch item that has not been accept')
+                else:
+                    offered_id = self.registeredUser[username]['offers'][offerToken][0]
+                    num_offered_id = self.registeredUser[username]['offers'][offerToken][1]
+                    demand_id = self.registeredUser[username]['offers'][offerToken][2]
+                    num_demand_id = self.registeredUser[username]['offers'][offerToken][3]
+                    self.registeredUser[username].inventories[offered_id] = self.registeredUser[username].inventories[offered_id] - num_offered_id
+                    self.registeredUser[username].inventories[demand_id] = self.registeredUser[username].inventories[demand_id] + num_demand_id 
+                    #self.registeredUser[username]['offers'].pop(offer_token)
+                    del self.registeredUser[username]['offers'][offerToken]
+            else:
+                raise TokenException('invalid offer_token')    
+        else:
+            raise TokenException('invalid token')
+
+    def cancelOffer(self, token, offer_token):
+        username = self.loggedUser.get(token)
+        username_offer = self.allOffers.get(offer_token)
+
+        if username:
+            if username_offer:
+                if username != username_offer:
+                    raise LogicException('you do not offer the item. Logic error?')
+                if self.registeredUser[username]['offers'][offerToken][4]:
+                    offered_id = self.registeredUser[username]['offers'][offerToken][0]
+                    num_offered_id = self.registeredUser[username]['offers'][offerToken][1]
+                    #dibalikin, item yang di offer bertambah
+                    self.registeredUser[username].inventories[offered_id] = self.registeredUser[username].inventories[offered_id] + num_offered_id
+                    del self.registeredUser[username]['offers'][offerToken]
+                else:
+                    raise LogicException('you cannot fetch item that has not been accept')
+            else:
+                raise TokenException('invalid offer_token')    
+        else:
+            raise TokenException('invalid token')
+

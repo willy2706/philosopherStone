@@ -10,10 +10,10 @@ Environment:
 
 Implementasi:
 -------------
-01. Server Status :
+01. Server Status : 
 02. Signup        : 100%, Eric
 03. Login Eric    : 100%, Eric
-04. Inventory     :
+04. Inventory     : 50%, Willy belum testing
 05. MixItem       :
 06. Map           : 100%, Eric
 07. Move          :

@@ -2,10 +2,11 @@ import md5
 import time
 import calendar
 import json
-
+import sqlite3
 '''
 The Exception raised when the server is having problem with usernames.
 '''
+
 class UsernameException(Exception):
     def __init__(self, value):
         self.value = value
@@ -36,16 +37,38 @@ Instance objects:
 -> gameMap
 '''
 class SisterServerLogic():
+    def printUser(self):
+        res = c.execute("SELECT * FROM users")
+        for row in res:
+            print row[0]
+            print row[1]
+
     def __init__(self):
+        conn = sqlite3.connect('sister.db') #otomatis bikin kalau ga ada
+        c = conn.cursor()
+        c.execute("CREATE TABLE IF NOT EXISTS users (username VARCHAR(255), password VARCHAR(255), PRIMARY KEY(username))")
+        c.execute("CREATE TABLE IF NOT EXISTS inventories (R11 INT, R12 INT, R13 INT, R14 INT, R21 INT, R22 INT, R23 INT, R31 INT, R32 INT, R41 INT, username VARCHAR(255), FOREIGN KEY (username) REFERENCES USERS(username))")
+        # try:
+        try:
+            c.execute("INSERT INTO users(username, password) VALUES ('willy', '1234')")
+        except Exception, e:
+            print 'uda dimasukkan'
+
+        conn.commit() #buat save
+        print "database create and connect successfully"
         self.registeredUser = {}
         self.loggedUser = {}
         self.loadMap('map.json')
 
     def signup(self, name, password):
+        c.execute("INSERT INTO users(username, password) VALUES ("+"'"+name+"', '"+ password + "'" +")") #belum testing
+        print 'sign up'
+        print res
         if name in self.registeredUser:
             raise UsernameException('username exists')
         
         self.registeredUser[name] = {'password': password}
+
 
     '''
     Login a user. Return (token, x, y, time) on success.
@@ -101,4 +124,12 @@ class SisterServerLogic():
                   self.registeredUser[username].get('offers', {}))
         
         else: # token not found
+            raise TokenException('invalid token')
+
+    def getInventory(self, token): #belum testing
+        username = self.loggedUser.get(token)
+        if username:
+            res = c.execute('SELECT * FROM inventories')
+            return res
+        else:
             raise TokenException('invalid token')

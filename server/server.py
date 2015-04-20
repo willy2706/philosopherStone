@@ -87,6 +87,20 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
 
+        elif method == 'inventory': #belum testing
+            try:
+                res = serverLogic.getInventory(mJSON['token'])
+                toSend['status'] = ok
+                toSend['inventory'] = res
+            except sister.TokenException, e:
+                toSend['status'] = 'fail'
+                toSend['inventory'] = e
+            except Exception, e:
+                toSend['status'] = 'error'
+                toSend['inventory'] = e
+            else:
+                pass
+
         # send response to client
         sToSend = json.dumps(toSend)
 

@@ -128,7 +128,7 @@ class SisterServerLogic():
     def getInventory(self, token): #belum testing
         username = self.loggedUser.get(token)
         if username:
-            res = c.execute('SELECT * FROM inventories')
+            res = c.execute("SELECT * FROM users WHERE username = " + username)
             return res
         else:
             raise TokenException('invalid token')

@@ -3,10 +3,10 @@ import time
 import calendar
 import json
 import sqlite3
+
 '''
 The Exception raised when the server is having problem with usernames.
 '''
-
 class UsernameException(Exception):
     def __init__(self, value):
         self.value = value
@@ -23,11 +23,21 @@ class TokenException(Exception):
         return self.value
 
 '''
+The Exception raised when the server is having problem with offers.
+'''
+OfferException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return self.value
+
+'''
 The Logic of Server.
 Instance objects:
 -> registeredUser: map of username @ map
    -> password: string
-   -> offers: map of offerToken @ tuple
+   -> loggedOn: boolean
+   -> offers: map of offerToken @ list
        0> int: oferred item id
        1> int: number of offered item
        2> int: demanded item id
@@ -35,6 +45,7 @@ Instance objects:
        4> boolean: availability, false means already sold
 -> loggedUser: map of token @ username
 -> gameMap
+-> allOffers: map offerToken @ username
 '''
 class SisterServerLogic():
     def printUser(self):
@@ -59,10 +70,12 @@ class SisterServerLogic():
         self.loggedUser = {}
         self.loadMap('map.json')
 
+    '''
+    Signup a user
+    '''
     def signup(self, name, password):
-        c.execute("INSERT INTO users(username, password) VALUES ("+"'"+name+"', '"+ password + "'" +")") #belum testing
-        print 'sign up'
-        print res
+        # c.execute("INSERT INTO users(username, password) VALUES ("+"'"+name+"', '"+ password + "'" +")") #belum testing
+
         if name in self.registeredUser:
             raise UsernameException('username exists')
         
@@ -83,8 +96,11 @@ class SisterServerLogic():
             unixTime = calendar.timegm(time.gmtime())
             token = md5.new(name+password+str(unixTime)).hexdigest()
 
+            # TODO: double login?
+            # TODO: logout?
             self.loggedUser[token] = name
             self.registeredUser[name]['loggedOn'] = True
+            # TODO: x, y itu apa? posisi dia sebelumnya ya?
             return (token, 0, 0, unixTime)
             
         else:
@@ -113,17 +129,56 @@ class SisterServerLogic():
         self.gameMap = json.loads(mapText)
 
     '''
-    Get all trade for a user token
+    Get all trade for a user token.
     '''
     def tradebox(self, token):
         username = self.loggedUser.get(token)
 
         if username:
-            return tuple(val + (key,) for key, val in
+            return tuple(tumple(val) + (key,) for key, val in
                   self.registeredUser[username].get('offers', {}))
         
         else: # token not found
             raise TokenException('invalid token')
+
+    '''
+    Put an offer.
+    '''
+    def putOffer(self, token, offered_item, n1, demanded_item, n2):
+        username = self.loggedUser.get(token)
+        if username:
+            # TODO: dapatkan banyak barang dengan id offered_item pada inventory user
+            numItem = 5
+
+            if numItem < n1:
+                raise OfferException('insufficient')
+            
+            userOffers = self.registeredUser[username].get('offers')
+            if not userOffers:
+                userOffers = {}
+
+            # TODO: generate offer based on offers, time, and server salt
+            offerToken = 'gbhotel'
+            userOffers[offerToken] = [offered_item, n1, demanded_item, n2, True]
+            allOffers[offerToken] = username
+            
+        else:
+            raise TokenException('invalid token')
+
+    '''
+    Accept an offer.
+    '''
+    def accept(self, offerToken):
+        username = self.allOffers.get(offerToken)
+        if username:
+            if self.registeredUser[username]['offers'][offerToken][4]:
+                self.registeredUser[username]['offers'][offerToken][4] = False
+            else:
+                raise OfferException('offer is not available')
+        
+        else:
+            raise OfferException('offer is not available')
+    
 
     def getInventory(self, token): #belum testing
         username = self.loggedUser.get(token)

@@ -87,6 +87,34 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
 
+        elif method == 'offer':
+            # process offer
+            try:
+                serverLogic.putOffer(mJSON['token'], mJSON['offered_item'], mJSON['n1'],
+                                     mJSON['demanded_item'], mJSON['n2'])
+                toSend['status'] = 'ok'
+
+            except sister.OfferException, sister.TokenException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
+        elif method == 'accept':
+            # process accept
+            try:
+                serverLogic.accept(mJSON['offer_token'])
+
+            except sister.OfferException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+            
         elif method == 'inventory': #belum testing
             try:
                 res = serverLogic.getInventory(mJSON['token'])

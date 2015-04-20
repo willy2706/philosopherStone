@@ -14,11 +14,11 @@ import org.json.simple.JSONValue;
  *
  * @author winsxx
  */
-public class SignUpRequest extends Request{
+public class SignupRequest extends Request{
     public String username;
     public String password;
     
-    public SignUpRequest() {
+    public SignupRequest() {
         method = "signup";
     }
     

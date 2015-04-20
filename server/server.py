@@ -94,7 +94,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                                      mJSON['demanded_item'], mJSON['n2'])
                 toSend['status'] = 'ok'
 
-            except sister.OfferException, sister.TokenException as e:
+            except (sister.OfferException, sister.TokenException) as e:
                 toSend['status'] = 'fail'
                 toSend['description'] = str(e)
 
@@ -118,16 +118,26 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         elif method == 'inventory': #belum testing
             try:
                 res = serverLogic.getInventory(mJSON['token'])
-                toSend['status'] = ok
+                toSend['status'] = 'ok'
                 toSend['inventory'] = res
-            except sister.TokenException, e:
-                toSend['status'] = 'fail'
-                toSend['inventory'] = e
-            except Exception, e:
+            except sister.TokenException as e:
+                toSend['status'] = 'fail' #ga ada fail
+                toSend['description'] = e
+            except Exception as e:
                 toSend['status'] = 'error'
-                toSend['inventory'] = e
-            else:
-                pass
+                toSend['description'] = e
+
+        elif method == 'mixitem':
+            try:
+                res = serverLogic.mixItem(mJSON['token'],mJSON['item1'],mJSON['item2'])
+                toSend['status'] = 'ok'
+                toSend['item'] = res
+            except (sister.TokenException, sister.MixtureException) as e :
+                toSend['status'] = 'fail'
+                toSend['description'] = e
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = 'e'
 
         # send response to client
         sToSend = json.dumps(toSend)

@@ -25,7 +25,27 @@ class TokenException(Exception):
 '''
 The Exception raised when the server is having problem with offers.
 '''
-OfferException(Exception):
+class OfferException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return self.value
+
+
+'''
+The Exception raised when the server is having problem with mixture.
+'''
+class MixtureException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return self.value
+
+
+'''
+The Exception raised when the server is having problem with item's index.
+'''
+class IndexItemException(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
@@ -43,6 +63,7 @@ Instance objects:
        2> int: demanded item id
        3> int: number of demanded item
        4> boolean: availability, false means already sold
+   -> inventories: list 
 -> loggedUser: map of token @ username
 -> gameMap
 -> allOffers: map offerToken @ username
@@ -54,6 +75,61 @@ class SisterServerLogic():
         for row in res:
             print row[0]
             print row[1]
+
+    def mix(self, item1, item2):
+        if (item1 == 0 and item2 == 1):
+            return 4
+        elif (item1 == 1 and item2 ==  2):
+            return 5
+        elif (item1 == 2 and item2 == 3):
+            return 6
+        elif (item1 == 4 and item2 == 5):
+            return 7
+        elif (item1 == 5 and item2 == 6):
+            return 8
+        elif (item1 == 7 and item2 == 8):
+            return 9
+
+    def processMix (self, item1, item2):
+        res = self.mix(item1, item2)
+        if res == None:
+            res = self.mix(item2, item1)
+            if res == None:
+                raise MixtureException ('no combination of the items')
+            else:
+                return res
+        else:  
+            return res
+
+    def mappingIndexItemToName (self, index):
+        if (index == 0):
+            return 'R11'
+        elif (index == 1):
+            return 'R12'
+        elif (index == 2):
+            return 'R13'
+        elif (index == 3):
+            return 'R14'
+        elif (index == 4):
+            return 'R21'
+        elif (index == 5):
+            return 'R22'
+        elif (index == 6):
+            return 'R23'
+        elif (index == 7):
+            return 'R31'
+        elif (index == 8):
+            return 'R32'
+        elif (index == 9):
+            return 'R41'
+
+    def validateIndexItem (self, index):
+        if (index < 0 or index > 9):
+            raise IndexItemException ('invalid item')
+
+    def synchronizeInventories(self):
+        for i in range (0,10):
+            self.registeredUser[username]['inventories'][i] = res[i+2]
 
     def __init__(self):
         conn = sqlite3.connect('sister.db') #otomatis bikin kalau ga ada
@@ -189,7 +265,30 @@ class SisterServerLogic():
     def getInventory(self, token): #belum testing
         username = self.loggedUser.get(token)
         if username:
-            res = c.execute('SELECT * FROM inventories')
-            return res
+            res = c.execute("SELECT * FROM users WHERE username = " + username).fetchone()
+            self.synchronizeInventories()
+            return (res[2], res[3], res[4], res[5], res[6], res[7], res[8], res[9], res[10], res[11])
+        else:
+            raise TokenException('invalid token')
+
+    def mixItem (self, token, item1, item2):
+        username = self.loggedUser.get(token)
+        if username:
+            self.validateIndexItem(item1)
+            self.validateIndexItem(item2)
+            res = c.execute("SELECT * FROM users WHERE username = " + username).fetchone()
+            if res[item1+2] < 3: #2 karena R11 ada di kolom 2 di database, index 0 == kolom 2
+                raise MixtureException('first item is not enough')
+            elif res[item2+2] < 3:
+                raise MixtureException('second item is not enough')
+            else:
+                numItem1 = res[item1+2] - 3 #item 1 jumlahnya kurang 3
+                numItem2 = res[item2+2] - 3 #item 2 jumlahnya kurang 3
+                itemRes = self.processMix(item1, item2) # dapatkan index item hasil penggabungan, ini ada potensi throw exception
+                numItemRes = res[itemRes+2] + 1 #item hasil gabung jumlahnya kurang 3
+                c.execute("UPDATE users SET " + mappingIndexItemToName[item1] + " = " + numItem1 + ", " + mappingIndexItemToName[item2] + " = " + numItem2 + ", " + mappingIndexItemToName[itemRes] + " = " + numItemRes + " WHERE username = " + username)
+                conn.commit()
+                self.synchronizeInventories()
+                return numItemRes
         else:
             raise TokenException('invalid token')

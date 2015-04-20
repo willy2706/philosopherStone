@@ -13,11 +13,11 @@ Implementasi:
 01. Server Status : 
 02. Signup        : 80%, Eric belum dihubungkan dengan database dan belum ditest
 03. Login Eric    : 70%, Eric masih ada issues dan belum ditest
-04. Inventory     : 50%, Willy belum testing
-05. MixItem       :
+04. Inventory     : 90%, Willy belum testing endpoint dan database
+05. MixItem       : 90%, Willy belim testing endpoint dan database
 06. Map           : 90%, Eric belum ditest
-07. Move          :
-08. Field         :
+07. Move          : 
+08. Field         : 
 09. Offer         : 80%, Eric belum dihubungkan dengan database dan belum ditest
 10. Tradebox      : 90%, Eric belum ditest
 11. SendFind      :

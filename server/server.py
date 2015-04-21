@@ -87,6 +87,92 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
 
+        elif method == 'offer':
+            # process offer
+            try:
+                serverLogic.putOffer(mJSON['token'], mJSON['offered_item'], mJSON['n1'],
+                                     mJSON['demanded_item'], mJSON['n2'])
+                toSend['status'] = 'ok'
+
+            except (sister.OfferException, sister.TokenException) as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
+        elif method == 'accept':
+            # process accept
+            try:
+                serverLogic.accept(mJSON['offer_token'])
+
+            except sister.OfferException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+            
+        elif method == 'inventory': #belum testing
+            try:
+                res = serverLogic.getInventory(mJSON['token'])
+                toSend['status'] = 'ok'
+                toSend['inventory'] = res
+            except sister.TokenException as e:
+                toSend['status'] = 'fail' #ga ada fail
+                toSend['description'] = e
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = e
+
+        elif method == 'mixitem':
+            try:
+                res = serverLogic.mixItem(mJSON['token'],mJSON['item1'],mJSON['item2'])
+                toSend['status'] = 'ok'
+                toSend['item'] = res
+            except (sister.TokenException, sister.MixtureException, sister.IndexItemException) as e :
+                toSend['status'] = 'fail'
+                toSend['description'] = e
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = 'e'
+
+        elif method == 'sendfind':
+            try:
+                res = serverLogic.sendFind(mJSON['method'], mJSON['token'], mJSON['item'])
+                toSend['status'] = 'ok'
+                toSend['offers'] = res
+            except (sister.TokenException, sister.IndexItemException) as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = e
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = e
+
+        elif method == 'fetchitem':
+            try:
+                serverLogic.fetchItem(mJSON['method'], mJSON['token'], mJSON['offer_token'])
+                toSend['status'] = 'ok'
+            except (sister.TokenException, sister.LogicException) as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = e
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = e
+
+        elif method == 'canceloffer':
+            try:
+                serverLogic.cancelOffer(mJSON['method'], mJSON['token'], mJSON['offer_token'])
+                toSend['status'] = 'ok'
+            except (sister.TokenException, sister.LogicException) as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = e
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = e
+
         # send response to client
         sToSend = json.dumps(toSend)
 

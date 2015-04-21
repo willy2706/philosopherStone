@@ -141,7 +141,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
 
         elif method == 'sendfind':
             try:
-                res = serverLogic.sendFind(mJSON['method'], mJSON['token'], mJSON['item'])
+                res = serverLogic.sendFind(mJSON['token'], mJSON['item'])
                 toSend['status'] = 'ok'
                 toSend['offers'] = res
             except (sister.TokenException, sister.IndexItemException) as e:
@@ -153,7 +153,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
 
         elif method == 'fetchitem':
             try:
-                serverLogic.fetchItem(mJSON['method'], mJSON['token'], mJSON['offer_token'])
+                serverLogic.fetchItem(mJSON['token'], mJSON['offer_token'])
                 toSend['status'] = 'ok'
             except (sister.TokenException, sister.LogicException) as e:
                 toSend['status'] = 'fail'
@@ -164,7 +164,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
 
         elif method == 'canceloffer':
             try:
-                serverLogic.cancelOffer(mJSON['method'], mJSON['token'], mJSON['offer_token'])
+                serverLogic.cancelOffer(mJSON['token'], mJSON['offer_token'])
                 toSend['status'] = 'ok'
             except (sister.TokenException, sister.LogicException) as e:
                 toSend['status'] = 'fail'
@@ -172,6 +172,30 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             except Exception as e:
                 toSend['status'] = 'error'
                 toSend['description'] = e
+
+        elif method == 'move':
+            try:
+                time = serverLogic.move(mJSON['token'], mJSON['x'], mJSON['y'])
+                toSend['status'] = 'ok'
+                toSend['time'] = time
+            except sister.TokenException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = e
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = e
+
+        elif method == 'field':
+            try:
+                item = serverLogic.field(mJSON['token'])
+                toSend['status'] = 'ok'
+                toSend['item'] = item
+            except sister.TokenException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = e
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = e        
 
         # send response to client
         sToSend = json.dumps(toSend)

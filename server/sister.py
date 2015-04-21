@@ -64,6 +64,8 @@ class LogicException(Exception):
 The Logic of Server.
 Instance objects:
 -> registeredUser: map of username @ map
+   -> x: integer
+   -> y: integer
    -> password: string
    -> loggedOn: boolean
    -> offers: map of offerToken @ list
@@ -111,26 +113,48 @@ class SisterServerLogic():
             return res
 
     def mappingIndexItemToName (self, index):
-        if (index == 0):
+        if index == 0:
             return 'R11'
-        elif (index == 1):
+        elif index == 1:
             return 'R12'
-        elif (index == 2):
+        elif index == 2:
             return 'R13'
-        elif (index == 3):
+        elif index == 3:
             return 'R14'
-        elif (index == 4):
+        elif index == 4:
             return 'R21'
-        elif (index == 5):
+        elif index == 5:
             return 'R22'
-        elif (index == 6):
+        elif index == 6:
             return 'R23'
-        elif (index == 7):
+        elif index == 7:
             return 'R31'
-        elif (index == 8):
+        elif index == 8:
             return 'R32'
-        elif (index == 9):
+        elif index == 9:
             return 'R41'
+
+    def mappingNameItemToIndex(self, name):
+        if name == 'R11':
+            return 0
+        elif name == 'R12':
+            return 1
+        elif name == 'R13':
+            return 2
+        elif name == 'R14':
+            return 3
+        elif name == 'R21':
+            return 4
+        elif name == 'R22':
+            return 5
+        elif name == 'R23':
+            return 6
+        elif name == 'R31':
+            return 7
+        elif name == 'R32':
+            return 8
+        elif name == 'R41':
+            return 9
 
     def validateIndexItem (self, index):
         if (index < 0 or index > 9):
@@ -345,8 +369,8 @@ class SisterServerLogic():
                     num_offered_id = self.registeredUser[username]['offers'][offerToken][1]
                     demand_id = self.registeredUser[username]['offers'][offerToken][2]
                     num_demand_id = self.registeredUser[username]['offers'][offerToken][3]
-                    self.registeredUser[username].inventories[offered_id] = self.registeredUser[username].inventories[offered_id] - num_offered_id
-                    self.registeredUser[username].inventories[demand_id] = self.registeredUser[username].inventories[demand_id] + num_demand_id 
+                    # self.registeredUser[username]['inventories'][offered_id] -= num_offered_id #TODO: INI SEBELUMNYA UDA KURANG YA?
+                    self.registeredUser[username]['inventories'][demand_id] += num_demand_id 
                     #self.registeredUser[username]['offers'].pop(offer_token)
                     del self.registeredUser[username]['offers'][offerToken]
             else:
@@ -366,7 +390,7 @@ class SisterServerLogic():
                     offered_id = self.registeredUser[username]['offers'][offerToken][0]
                     num_offered_id = self.registeredUser[username]['offers'][offerToken][1]
                     #dibalikin, item yang di offer bertambah
-                    self.registeredUser[username].inventories[offered_id] = self.registeredUser[username].inventories[offered_id] + num_offered_id
+                    self.registeredUser[username]['inventories'][offered_id] += num_offered_id
                     del self.registeredUser[username]['offers'][offerToken]
                 else:
                     raise LogicException('you cannot fetch item that has not been accept')
@@ -375,3 +399,24 @@ class SisterServerLogic():
         else:
             raise TokenException('invalid token')
 
+    def move(self, token, x, y):
+        username = self.loggedUser.get(token)
+        if username:
+            unixTime = calendar.timegm(time.gmtime())
+
+            self.registeredUser[username]['x'] = x
+            self.registeredUser[username]['y'] = y
+            return unixTime
+        else:
+            raise TokenException('invalid token')    
+
+    def field(self, token):
+        username = self.loggedUser.get(token)
+        if username:
+            x = self.registeredUser[username]['x']
+            y = self.registeredUser[username]['y']
+            nameItem = self.gameMap['map'][x][y]
+            index = self.mappingNameItemToIndex(nameItem)
+            self.registeredUser[username]['inventories'][index] += 1 
+        else:
+            raise TokenException('invalid token')

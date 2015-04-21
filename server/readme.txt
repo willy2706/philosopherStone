@@ -16,8 +16,8 @@ Implementasi:
 04. Inventory     : 90%, Willy belum testing endpoint dan database
 05. MixItem       : 90%, Willy belim testing endpoint dan database
 06. Map           : 90%, Eric belum ditest
-07. Move          : 
-08. Field         : 
+07. Move          : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
+08. Field         : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 09. Offer         : 80%, Eric belum dihubungkan dengan database dan belum ditest
 10. Tradebox      : 90%, Eric belum ditest
 11. SendFind      : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
@@ -30,8 +30,8 @@ Implementasi:
 Pembagian kerja:
 ----------------
 Eric   : 2 3 6 9 10 14
-Willy  : 1 4 5 13 15 16
-Aurelia: 7 8 11 12
+Willy  : 1 4 5 7 8 13 15 16
+Aurelia: 11 12
 
 camelCase:
 ----------

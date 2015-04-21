@@ -70,24 +70,27 @@
         android:layout_width="100sp"
         android:layout_height="wrap_content"
         android:id="@+id/port"
-        android:hint="@string/host"
+        android:hint="@string/port"
         android:textColorHint="#A0A0A0"
+        android:inputType="number"
+        android:ems="10"
         android:layout_marginRight="20dp"
         android:layout_marginLeft="10dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"/>
 
     <EditText
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:id="@+id/host"
-        android:hint="@string/port"
+        android:hint="@string/host"
         android:textColorHint="#A0A0A0"
-        android:layout_toLeftOf="@+id/portText"
+        android:layout_toLeftOf="@+id/port"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="10dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"/>
+
 
 
 </RelativeLayout>

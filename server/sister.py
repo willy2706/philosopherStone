@@ -281,6 +281,35 @@ class SisterServerLogic():
             raise TokenException('invalid token')
 
     '''
+    Accept an offer from client.
+    '''
+    def sendAccept(self, token, offerToken):
+        #TODO gabung dengan accept
+        username = self.loggedUser.get(token)
+        retTup = {}
+        if username:
+            username_offers = self.allOffers.get(offerToken)
+            if username == username_offers:
+                raise LogicException('you cannot accept item you offer')
+            else:
+                offers = self.registeredUser[username]['offers'][offerToken]
+                offeredItem = offers[0]
+                numOfferedItem = offers[1]
+                demandItem = offers[2]
+                numDemandItem = offers[3]
+                availability = offers[4]
+                if availability:
+                    if self.registeredUser[username]['inventories'][demandItem] > numDemandItem:
+                        self.registeredUser[username]['inventories'][offeredItem] += numOfferedItem
+                        self.registeredUser[username]['inventories'][demandItem] -= numDemandItem
+                    else:
+                        raise OfferException('you have not enough the demanded item')
+                else:
+                    raise OfferException('offered not available anymore')
+        else:
+            raise TokenException('invalid token')
+
+    '''
     Accept an offer.
     '''
     def accept(self, offerToken):
@@ -335,10 +364,11 @@ class SisterServerLogic():
             raise TokenException('invalid token')
 
     '''
-    Mix 2 categories with 3 each to 1
+    Find an item that requested from client
     throwable: IndexItemException, TokenException, MixtureException.
     '''
     def sendFind (self, token, item):
+        #TODO gabung dengan find offer
         username = self.loggedUser.get(token)
         retTup = {}
         if username:
@@ -353,6 +383,21 @@ class SisterServerLogic():
                     return retTup
         else:
             raise TokenException('invalid token')
+
+    '''
+    Find an item that requested from server
+    throwable: IndexItemException, MixtureException.
+    '''
+    def findOffer (self, item):
+        retTup = {}
+        self.validateIndexItem(item1)
+        for un, m in self.registeredUser:
+            offerLists = m['offers']
+            for offerToken, offers in offerLists:
+                if (offers[0] == item and offers[4] == True):
+                    tup1 = offers + (key,)
+                    retTup = retTup + (tup,)
+            return retTup
 
     def fetchItem(self, token, offer_token):
         username = self.loggedUser.get(token)

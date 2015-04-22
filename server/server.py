@@ -22,8 +22,17 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         # process the request
         toSend = {}
         method = mJSON['method']
-        
-        if method == 'signup':
+
+        if method == 'serverStatus':
+            try:
+                serverLogic.serverStatus(mJSON['server'])
+                toSend['status'] = 'ok'
+
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
+        elif method == 'signup':
             # process signup
             try:
                 serverLogic.signup(mJSON['username'], mJSON['password'])
@@ -51,6 +60,20 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'fail'
                 toSend['description'] = str(e)
                 
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
+        elif method == 'inventory':
+            try:
+                res = serverLogic.getInventory(mJSON['token'])
+                toSend['status'] = 'ok'
+                toSend['inventory'] = res
+
+            except sister.TokenException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
             except Exception as e:
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
@@ -114,18 +137,6 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             except Exception as e:
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
-            
-        elif method == 'inventory': #belum testing
-            try:
-                res = serverLogic.getInventory(mJSON['token'])
-                toSend['status'] = 'ok'
-                toSend['inventory'] = res
-            except sister.TokenException as e:
-                toSend['status'] = 'fail' #ga ada fail
-                toSend['description'] = e
-            except Exception as e:
-                toSend['status'] = 'error'
-                toSend['description'] = e
 
         elif method == 'mixitem':
             try:

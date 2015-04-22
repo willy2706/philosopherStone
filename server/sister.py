@@ -75,11 +75,14 @@ Instance objects:
        2> int: demanded item id
        3> int: number of demanded item
        4> boolean: availability, false means already sold
-   -> inventories: list 
+   -> inventory: list
 -> loggedUser: map of token @ username
 -> gameMap
 -> allOffers: map offerToken @ username
 -> salt: string appended to be hashed
+-> servers: list of map
+   -> ip: string
+   -> port: int
 '''
 class SisterServerLogic():
     def printUser(self):
@@ -163,7 +166,7 @@ class SisterServerLogic():
 
     def synchronizeInventories(self):
         for i in range (0,10):
-            self.registeredUser[username]['inventories'][i] = res[i+2]
+            self.registeredUser[username]['inventory'][i] = res[i+2]
 
     def __init__(self):
         conn = sqlite3.connect('sister.db') #otomatis bikin kalau ga ada
@@ -181,6 +184,12 @@ class SisterServerLogic():
         self.loggedUser = {}
         self.loadMap('map.json')
         self.salt = 'mi0IUsW4'
+
+    '''
+    Set the list of servers
+    '''
+    def serverStatus(self, servers):
+        self.servers = servers
 
     '''
     Signup a user.
@@ -208,6 +217,24 @@ class SisterServerLogic():
 
         self.setLogin(token, name)
         return (token, 0, 0, unixTime)
+
+    '''
+    Get the inventory of a user.
+    throwable: IndexItemException.
+    '''
+    def getInventory(self, token):
+        username = self.getNameByToken(token)
+
+        return self.getInventory0(username)
+
+    def getInventory0(self, username):
+        return self.registeredUser[username].get('inventory')
+
+        '''
+        res = c.execute("SELECT * FROM users WHERE username = " + username).fetchone()
+        self.synchronizeInventories()
+        return (res[2], res[3], res[4], res[5], res[6], res[7], res[8], res[9], res[10], res[11])
+        '''
 
     '''
     Returns the name, width, and height of the map in this server.
@@ -293,9 +320,9 @@ class SisterServerLogic():
                 numDemandItem = offers[3]
                 availability = offers[4]
                 if availability:
-                    if self.registeredUser[username]['inventories'][demandItem] > numDemandItem:
-                        self.registeredUser[username]['inventories'][offeredItem] += numOfferedItem
-                        self.registeredUser[username]['inventories'][demandItem] -= numDemandItem
+                    if self.registeredUser[username]['inventory'][demandItem] > numDemandItem:
+                        self.registeredUser[username]['inventory'][offeredItem] += numOfferedItem
+                        self.registeredUser[username]['inventory'][demandItem] -= numDemandItem
                     else:
                         raise OfferException('you have not enough the demanded item')
                 else:
@@ -318,18 +345,6 @@ class SisterServerLogic():
             raise OfferException('offer is not available')
     
 
-    '''
-    Get the inventory of a user.
-    throwable: IndexItemException.
-    '''
-    def getInventory(self, token): #belum testing
-        username = self.loggedUser.get(token)
-        if username:
-            res = c.execute("SELECT * FROM users WHERE username = " + username).fetchone()
-            self.synchronizeInventories()
-            return (res[2], res[3], res[4], res[5], res[6], res[7], res[8], res[9], res[10], res[11])
-        else:
-            raise TokenException('invalid token')
 
     '''
     Mix 2 categories with 3 each to 1
@@ -409,7 +424,7 @@ class SisterServerLogic():
                     demand_id = self.registeredUser[username]['offers'][offerToken][2]
                     num_demand_id = self.registeredUser[username]['offers'][offerToken][3]
                     # self.registeredUser[username]['inventories'][offered_id] -= num_offered_id #TODO: INI SEBELUMNYA UDA KURANG YA?
-                    self.registeredUser[username]['inventories'][demand_id] += num_demand_id 
+                    self.registeredUser[username]['inventory'][demand_id] += num_demand_id
                     #self.registeredUser[username]['offers'].pop(offer_token)
                     del self.registeredUser[username]['offers'][offerToken]
             else:
@@ -429,7 +444,7 @@ class SisterServerLogic():
                     offered_id = self.registeredUser[username]['offers'][offerToken][0]
                     num_offered_id = self.registeredUser[username]['offers'][offerToken][1]
                     #dibalikin, item yang di offer bertambah
-                    self.registeredUser[username]['inventories'][offered_id] += num_offered_id
+                    self.registeredUser[username]['inventory'][offered_id] += num_offered_id
                     del self.registeredUser[username]['offers'][offerToken]
                 else:
                     raise LogicException('you cannot fetch item that has not been accept')
@@ -456,7 +471,7 @@ class SisterServerLogic():
             y = self.registeredUser[username]['y']
             nameItem = self.gameMap['map'][x][y]
             index = self.mappingNameItemToIndex(nameItem)
-            self.registeredUser[username]['inventories'][index] += 1 
+            self.registeredUser[username]['inventory'][index] += 1
         else:
             raise TokenException('invalid token')
 
@@ -495,3 +510,13 @@ class SisterServerLogic():
     '''
     def updateRecord(self, username, updated):
         self.registeredUser.update(updated)
+
+    '''
+    Get the username of a userToken.
+    '''
+    def getNameByToken(self, token):
+        result = self.loggedUser.get(token)
+        if result:
+            return result
+        else:
+            raise TokenException('invalid token')

@@ -3,6 +3,7 @@ import time
 import calendar
 import json
 import sqlite3
+import random
 
 '''
 The Exception raised when the server is having problem with usernames.
@@ -69,16 +70,16 @@ Instance objects:
    -> y: integer
    -> password: string
    -> loggedOn: boolean
-   -> offers: map of offerToken @ list
-       0> int: oferred item id
-       1> int: number of offered item
-       2> int: demanded item id
-       3> int: number of demanded item
-       4> boolean: availability, false means already sold
    -> inventory: list
 -> loggedUser: map of token @ username
 -> gameMap
--> allOffers: map offerToken @ username
+-> allOffers: map offerToken @ list
+   -> offeredItem
+   -> n1
+   -> demandedItem
+   -> n2
+   -> availability
+   -> username
 -> salt: string appended to be hashed
 -> servers: list of map
    -> ip: string
@@ -188,6 +189,7 @@ class SisterServerLogic():
         self.loggedUser = {}
         self.loadMap('map.json')
         self.salt = 'mi0IUsW4'
+        self.allOffers = {}
 
     '''
     Set the list of servers
@@ -324,46 +326,41 @@ class SisterServerLogic():
 
     '''
     Get all trade for a user token.
+    Possible Exceptions: TokenException
     '''
     def tradebox(self, token):
-        username = self.loggedUser.get(token)
+        username = self.getNameByToken(token)
 
-        if username:
-            return tuple(tumple(val) + (key,) for key, val in
-                  self.registeredUser[username].get('offers', {}))
-        
-        else: # token not found
-            raise TokenException('invalid token')
+        return self.getOffers(username)
 
     '''
     Put an offer.
+    Possible Exceptions: TokenException, OfferException
     '''
-    def putOffer(self, token, offered_item, n1, demanded_item, n2):
-        username = self.loggedUser.get(token)
-        if username:
-            # TODO: dapatkan banyak barang dengan id offered_item pada inventory user
-            numItem = 5
+    def putOffer(self, token, offeredItem, n1, demandedItem, n2):
+        username = self.getNameByToken(token)
 
-            if numItem < n1:
-                raise OfferException('insufficient')
-            
-            userOffers = self.registeredUser[username].get('offers')
-            if not userOffers:
-                userOffers = {}
+        mRecord = self.getRecordByName(username)
+        numItem = mRecord['inventory'].get(offeredItem)
 
-            # generate offer
-            unixTime = calendar.timegm(time.gmtime())
-            lOfferToken = [token, str(unixTime)]
-            lOfferToken += [salt, str(random.randint(-2147483648, 2147483647))]
-            lOfferToken += [chr(ord('A')+offered_item), str(n1)]
-            lOfferToken += [chr(ord('A')+demanded_item), str(n2)]
-            offerToken = md5.new(''.join(lOfferToken)).hexdigest()
-            
-            userOffers[offerToken] = [offered_item, n1, demanded_item, n2, True]
-            allOffers[offerToken] = username
-            
-        else:
-            raise TokenException('invalid token')
+        if numItem < n1:
+            raise OfferException('insufficient')
+
+        # userOffers = self.registeredUser[username].get('offers')
+        # if not userOffers:
+        #    userOffers = {}
+
+        # generate offer
+        unixTime = calendar.timegm(time.gmtime())
+        lOfferToken = [token, str(unixTime)]
+        lOfferToken += [self.salt, str(random.randint(-2147483648, 2147483647))]
+        lOfferToken += [chr(ord('A')+offeredItem), str(n1)]
+        lOfferToken += [chr(ord('A')+demandedItem), str(n2)]
+        offerToken = hashlib.md5(''.join(lOfferToken)).hexdigest()
+
+        self.addOffer(username, offerToken, offeredItem, n1, demandedItem, n2, True)
+        # userOffers[offerToken] = [offeredItem, n1, demandedItem, n2, True]
+        # allOffers[offerToken] = username
 
     '''
     Accept an offer from client.
@@ -417,20 +414,18 @@ class SisterServerLogic():
     '''
     def sendFind (self, token, item):
         #TODO gabung dengan find offer
-        username = self.loggedUser.get(token)
-        retTup = {}
-        if username:
-            self.validateIndexItem(item1)
-            for un, m in self.registeredUser:
-                if un != username: #kan mau nya find offer yang bukan punya dia
-                    offerLists = m['offers']
-                    for offerToken, offers in offerLists:
-                        if (offers[0] == item and offers[4] == True):
-                            tup1 = offers + (key,)
-                            retTup = retTup + (tup,)
-                    return retTup
-        else:
-            raise TokenException('invalid token')
+        username = self.getNameByToken(token)
+
+        retTup = []
+        self.validateIndexItem(item1)
+        for un, m in self.registeredUser:
+            if un != username: #kan mau nya find offer yang bukan punya dia
+                offerLists = m['offers']
+                for offerToken, offers in offerLists:
+                    if (offers[0] == item and offers[4] == True):
+                        tup1 = offers + (key,)
+                        retTup = retTup + (tup,)
+                return retTup
 
     '''
     Find an item that requested from server
@@ -492,10 +487,6 @@ class SisterServerLogic():
         else:
             raise TokenException('invalid token')
 
-
-
-
-
     '''
     Check whether username is registered within the system.
     '''
@@ -545,3 +536,16 @@ class SisterServerLogic():
             return result
         else:
             raise TokenException('invalid token')
+
+    '''
+    Add an offer to the system.
+    '''
+    def addOffer(self, username, offerToken, offeredItem, n1, demandedItem, n2, availability):
+        self.allOffers[offerToken] = [offeredItem, n1, demandedItem, n2, availability, username]
+
+    '''
+    Get offers for a username.
+    '''
+    def getOffers(self, username):
+        return tuple(tuple(val[:-1]) + (key,) for key, val in
+              self.allOffers.items() if val[-1] == username)

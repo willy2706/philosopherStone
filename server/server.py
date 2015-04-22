@@ -138,6 +138,21 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
 
+        elif method == 'offer':
+            # process offer
+            try:
+                serverLogic.putOffer(mJSON['token'], mJSON['offered_item'], mJSON['n1'],
+                                     mJSON['demanded_item'], mJSON['n2'])
+                toSend['status'] = 'ok'
+
+            except (sister.OfferException, sister.TokenException) as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
         elif method == 'tradebox':
             # process tradebox request
             try:
@@ -153,14 +168,13 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
 
-        elif method == 'offer':
-            # process offer
+        elif method == 'sendfind':
             try:
-                serverLogic.putOffer(mJSON['token'], mJSON['offered_item'], mJSON['n1'],
-                                     mJSON['demanded_item'], mJSON['n2'])
+                res = serverLogic.sendFind(mJSON['token'], mJSON['item'])
                 toSend['status'] = 'ok'
+                toSend['offers'] = res
 
-            except (sister.OfferException, sister.TokenException) as e:
+            except (sister.TokenException, sister.IndexItemException) as e:
                 toSend['status'] = 'fail'
                 toSend['description'] = str(e)
 
@@ -181,17 +195,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
 
-        elif method == 'sendfind':
-            try:
-                res = serverLogic.sendFind(mJSON['token'], mJSON['item'])
-                toSend['status'] = 'ok'
-                toSend['offers'] = res
-            except (sister.TokenException, sister.IndexItemException) as e:
-                toSend['status'] = 'fail'
-                toSend['description'] = e
-            except Exception as e:
-                toSend['status'] = 'error'
-                toSend['description'] = e
+
 
         elif method == 'fetchitem':
             try:

@@ -173,14 +173,14 @@ class SisterServerLogic():
             self.registeredUser[username]['inventory'][i] = res[i+2]
 
     def __init__(self):
-        conn = sqlite3.connect('sister.db') #otomatis bikin kalau ga ada
-        c = conn.cursor()
-        c.execute("CREATE TABLE IF NOT EXISTS users (username VARCHAR(255), password VARCHAR(255), R11 INT, R12 INT, R13 INT, R14 INT, R21 INT, R22 INT, R23 INT, R31 INT, R32 INT, R41 INT, X INT, Y INT, PRIMARY KEY(username))")
-        c.execute("CREATE TABLE IF NOT EXISTS offers (offer_token VARCHAR(255), username VARCHAR(255),offered_item INT, num_offered_item INT, demanded_item INT, num_demanded_item INT, availability TINYINT, PRIMARY KEY(offer_token), FOREIGN KEY(username) REFERENCES users(username))")
-        # try:
-        #     c.execute("INSERT INTO users(username, password) VALUES ('willy', '1234')")
-        # except Exception, e:
-        #     print 'uda dimasukkan'
+        conn = sqlite3.connect('sister.db', check_same_thread=False) #otomatis bikin kalau ga ada
+        self.c = conn.cursor()
+        self.c.execute("CREATE TABLE IF NOT EXISTS users (username VARCHAR(255), password VARCHAR(255) NOT NULL, R11 INT NOT NULL DEFAULT 0, R12 INT NOT NULL DEFAULT 0, R13 INT NOT NULL DEFAULT 0, R14 INT NOT NULL DEFAULT 0, R21 INT NOT NULL DEFAULT 0, R22 INT NOT NULL DEFAULT 0, R23 INT NOT NULL DEFAULT 0, R31 INT NOT NULL DEFAULT 0, R32 INT NOT NULL DEFAULT 0, R41 INT NOT NULL DEFAULT 0, X INT NOT NULL DEFAULT 0, Y INT NOT NULL DEFAULT 0, PRIMARY KEY(username))")
+        self.c.execute("CREATE TABLE IF NOT EXISTS offers (offer_token VARCHAR(255), username VARCHAR(255) NOT NULL, offered_item INT NOT NULL, num_offered_item INT NOT NULL, demanded_item INT NOT NULL, num_demanded_item INT NOT NULL, availability TINYINT NOT NULL, PRIMARY KEY(offer_token), FOREIGN KEY(username) REFERENCES users(username))")
+        try:
+            self.c.execute("INSERT INTO users(username, password) VALUES ('willy2', '%s')"%hashlib.md5('1234').hexdigest())
+        except Exception, e:
+            print e
 
         conn.commit() #buat save
         print "database create and connect successfully"
@@ -212,7 +212,7 @@ class SisterServerLogic():
     '''
     def login(self, name, password):
         mRecord = self.getRecordByName(name)
-
+        
         if mRecord.get('password') != hashlib.md5(password).hexdigest():
             raise UsernameException('username/password combination is not found')
 
@@ -513,7 +513,15 @@ class SisterServerLogic():
     Possible Exceptions: UsernameException
     '''
     def getRecordByName(self, username):
-        record = self.registeredUser.get(username)
+        # TODO: masukkan ke memory
+        # record = self.registeredUser.get(username)
+        res = self.c.execute("SELECT * FROM users WHERE username = '" + username + "'").fetchone()
+        record = {}
+        record['x'] = res[12]
+        record['y'] = res[13]
+        record['password'] = res[1]
+        record['inventory'] = [res[i] for i in range(2, 12)]
+        record['loggedOn'] = False
         if record:
             return record
         else:

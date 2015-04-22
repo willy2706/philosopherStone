@@ -1,4 +1,4 @@
-import md5
+import hashlib
 import time
 import calendar
 import json
@@ -12,6 +12,7 @@ class UsernameException(Exception):
         self.value = value
     def __str__(self):
         return self.value
+
 
 '''
 The Exception raised when the server is having problem with tokens.
@@ -186,16 +187,14 @@ class SisterServerLogic():
         self.salt = 'mi0IUsW4'
 
     '''
-    Signup a user
+    Signup a user.
+    Possible Exceptions: UsernameException
     '''
     def signup(self, name, password):
-        # c.execute("INSERT INTO users(username, password) VALUES ("+"'"+name+"', '"+ password + "'" +")") #belum testing
-
-        if name in self.registeredUser:
+        if self.isUsernameRegistered(name):
             raise UsernameException('username exists')
-        
-        self.registeredUser[name] = {'password': password}
 
+        self.registerUserWithPassword(name, password)
 
     '''
     Login a user. Return (token, x, y, time) on success.
@@ -203,21 +202,16 @@ class SisterServerLogic():
     -> UsernameException
     '''
     def login(self, name, password):
-        mPassword = self.registeredUser.get(name)
-        if mPassword:
-            if mPassword != password:
-                raise UsernameException('username/password combination is not found')
+        mRecord = self.getUserByName(name)
 
-            unixTime = calendar.timegm(time.gmtime())
-            token = md5.new(name).hexdigest()
+        if mRecord.get('password') != hashlib.md5(password).hexdigest():
+            raise UsernameException('username/password combination is not found')
 
-            self.loggedUser[token] = name
-            self.registeredUser[name]['loggedOn'] = True
-            # TODO: x, y itu apa? posisi dia sebelumnya ya?
-            return (token, 0, 0, unixTime)
-            
-        else:
-            raise UsernameException('username/password combination is not found')    
+        unixTime = calendar.timegm(time.gmtime())
+        token = hashlib.md5(name).hexdigest()
+
+        self.setLogin(token, name)
+        return (token, 0, 0, unixTime)
 
     '''
     Returns the name, width, and height of the map in this server.
@@ -469,3 +463,39 @@ class SisterServerLogic():
             self.registeredUser[username]['inventories'][index] += 1 
         else:
             raise TokenException('invalid token')
+
+    '''
+    Check whether username is registered within the system.
+    '''
+    def isUsernameRegistered(self, username):
+        return username in self.registeredUser
+
+    '''
+    Register a user.
+    '''
+    def registerUserWithPassword(self, username, password):
+        self.registeredUser[username] = {'password': hashlib.md5(password).hexdigest()}
+
+    '''
+    Get record of user.
+    Possible Exceptions: UsernameException
+    '''
+    def getRecordByName(self, username):
+        record = self.registeredUser.get(username)
+        if record:
+            return record
+        else:
+            raise UsernameException('username/password combination is not found')
+
+    '''
+    Login the user and set token.
+    '''
+    def setLogin(self, token, username):
+        self.loggedUser[token] = username
+        self.updateRecord(username, {'loggedOn':True})
+
+    '''
+    Update the record of a user.
+    '''
+    def updateRecord(self, username, updated):
+        self.registeredUser.update(updated)

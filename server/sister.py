@@ -174,8 +174,8 @@ class SisterServerLogic():
             self.registeredUser[username]['inventory'][i] = res[i+2]
 
     def __init__(self):
-        conn = sqlite3.connect('sister.db', check_same_thread=False) #otomatis bikin kalau ga ada
-        self.c = conn.cursor()
+        self.conn = sqlite3.connect('sister.db', check_same_thread=False) #otomatis bikin kalau ga ada
+        self.c = self.conn.cursor()
         self.c.execute("CREATE TABLE IF NOT EXISTS users (username VARCHAR(255), password VARCHAR(255) NOT NULL, R11 INT NOT NULL DEFAULT 0, R12 INT NOT NULL DEFAULT 0, R13 INT NOT NULL DEFAULT 0, R14 INT NOT NULL DEFAULT 0, R21 INT NOT NULL DEFAULT 0, R22 INT NOT NULL DEFAULT 0, R23 INT NOT NULL DEFAULT 0, R31 INT NOT NULL DEFAULT 0, R32 INT NOT NULL DEFAULT 0, R41 INT NOT NULL DEFAULT 0, X INT NOT NULL DEFAULT 0, Y INT NOT NULL DEFAULT 0, PRIMARY KEY(username))")
         self.c.execute("CREATE TABLE IF NOT EXISTS offers (offer_token VARCHAR(255), username VARCHAR(255) NOT NULL, offered_item INT NOT NULL, num_offered_item INT NOT NULL, demanded_item INT NOT NULL, num_demanded_item INT NOT NULL, availability TINYINT NOT NULL, PRIMARY KEY(offer_token), FOREIGN KEY(username) REFERENCES users(username))")
         try:
@@ -183,7 +183,7 @@ class SisterServerLogic():
         except Exception, e:
             print e
 
-        conn.commit() #buat save
+        self.conn.commit() #buat save
         print "database create and connect successfully"
         self.registeredUser = {}
         self.loggedUser = {}
@@ -491,13 +491,19 @@ class SisterServerLogic():
     Check whether username is registered within the system.
     '''
     def isUsernameRegistered(self, username):
-        return username in self.registeredUser
+        res = self.c.execute("SELECT * FROM users WHERE username = '" + username + "'").fetchone()
+        return res != None
+        # TODO: tanya eric kode dibawah gimana?
+        # return username in self.registeredUser
 
     '''
     Register a user.
     '''
     def registerUserWithPassword(self, username, password):
         self.registeredUser[username] = {'password': hashlib.md5(password).hexdigest()}
+        self.c.execute("INSERT INTO users(username, password) VALUES ('%s', '%s')"%(username,hashlib.md5(password).hexdigest()))
+        self.conn.commit()
+
 
     '''
     Get record of user.
@@ -505,9 +511,12 @@ class SisterServerLogic():
     '''
     def getRecordByName(self, username):
         res = self.c.execute("SELECT * FROM users WHERE username = '" + username + "'").fetchone()
+        if res == None:
+            return UsernameException('username not found in database')
         record = {}
         record['x'] = res[12]
         record['y'] = res[13]
+        print 'kkk'
         record['password'] = res[1]
         record['inventory'] = [res[i] for i in range(2, 12)]
         record['loggedOn'] = False

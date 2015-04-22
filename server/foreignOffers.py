@@ -2,6 +2,8 @@ import json
 import socket
 import threading
 
+import sisterexceptions
+
 import helpers
 
 
@@ -17,7 +19,7 @@ class OffersFinder():
     -> timeout: float: timeout in seconds
     '''
 
-    def __init__(self, addresses, item, timeout):
+    def __init__(self, addresses, item, timeout=3):
         '''
         Initiate this class.
         @addresses list/tuple of address (ip:string, port:int)
@@ -39,13 +41,24 @@ class OffersFinder():
         # create many TCP sockets to addresses and run each with it's own thread
         running = []
         for address in self.addresses:
-            t = threading.Thread(target=self.sendFindOffer, args=(address, self.item, self.timeout))
+            t = threading.Thread(target=self.sendFindOfferWithExceptionHandling,
+                                 args=(address, self.item, self.timeout))
             running.append(t)
 
         for t in running:
             t.join()
 
         return self.offers
+
+    def sendFindOfferWithExceptionHandling(self, address, item, timeout):
+        '''
+        This method is just the same as sendFindOffer, except this method includes exception handling
+        '''
+        try:
+            self.sendFindOffer(address, item, timeout)
+
+        except Exception as e:
+            print e
 
     def sendFindOffer(self, address, item, timeout):
         '''
@@ -117,6 +130,51 @@ class ServerDealer():
             ->port: int
         '''
         self.servers = servers
+
+    def accept(self, offerToken, timeout=3):
+        '''
+        Send accept to other server.
+        :param offerToken: string
+        :return: None
+        '''
+
+        # search for offers with offerToken
+        for key, record in self.foreignOffers.items():
+            offers = record['offers']
+            if offerToken in offers:
+                # send accept to other server
+                toSend = {}
+                toSend['method'] = 'accept'
+                toSend['offerToken'] = offerToken
+
+                # setup connection
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(timeout)
+                s.connect(key[:2])
+
+                # send and receive
+                s.sendall(json.dumps(toSend))
+
+                everything = ''
+                while True:
+                    data = s.recv(4096)
+                    everything += data
+                    if helpers.containsValidJSON(everything):
+                        break
+
+                mJSON = json.loads(everything)
+
+                status = mJSON['status']
+
+                # raise exception if not ok
+                raise sisterexceptions.OfferException('offer no longer available')
+
+                found = True
+                break
+
+        if not found:
+            raise sisterexceptions.OfferException('offer not found')
+
 
     def findOffers(self, item):
         '''

@@ -1,6 +1,7 @@
 import calendar
 import time
 
+
 def containsValidJSON(data):
     '''
     Check wether data contains a valid JSON or not.

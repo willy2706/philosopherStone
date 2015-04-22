@@ -6,63 +6,9 @@ import sqlite3
 import random
 import socket
 import foreignOffers
-
-'''
-The Exception raised when the server is having problem with usernames.
-'''
-class UsernameException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return self.value
+import sisterexceptions
 
 
-'''
-The Exception raised when the server is having problem with tokens.
-'''
-class TokenException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return self.value
-
-'''
-The Exception raised when the server is having problem with offers.
-'''
-class OfferException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return self.value
-
-
-'''
-The Exception raised when the server is having problem with mixture.
-'''
-class MixtureException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return self.value
-
-
-'''
-The Exception raised when the server is having problem with item's index.
-'''
-class IndexItemException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return self.value
-
-'''
-The Exception raised when the server is having problem with logic.
-'''
-class LogicException(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return self.value
 
 '''
 The Logic of Server.
@@ -335,7 +281,7 @@ class SisterServerLogic():
     def tradebox(self, token):
         username = self.getNameByToken(token)
 
-        return self.getOffers(username)
+        return self.getOffersByName(username)
 
     '''
     Put an offer.
@@ -367,39 +313,52 @@ class SisterServerLogic():
         # allOffers[offerToken] = username
 
 
-    def sendAccept(self, token, offerToken):
+    def sendAccept(self, userToken, offerToken):
         '''
         Accept an offer from client.
         '''
         #TODO gabung dengan accept
-        username = self.getNameByToken(token)
-        retTup = {}
-        if username:
-            username_offers = self.allOffers.get(offerToken)
-            if username == username_offers:
-                raise LogicException('you cannot accept item you offer')
-            else:
-                offers = self.registeredUser[username]['offers'][offerToken]
-                offeredItem = offers[0]
-                numOfferedItem = offers[1]
-                demandItem = offers[2]
-                numDemandItem = offers[3]
-                availability = offers[4]
-                if availability:
-                    if self.registeredUser[username]['inventory'][demandItem] > numDemandItem:
-                        self.registeredUser[username]['inventory'][offeredItem] += numOfferedItem
-                        self.registeredUser[username]['inventory'][demandItem] -= numDemandItem
-                    else:
-                        raise OfferException('you have not enough the demanded item')
-                else:
-                    raise OfferException('offered not available anymore')
-        else:
-            raise TokenException('invalid token')
+        username = self.getNameByToken(userToken)
 
-    '''
-    Accept an offer.
-    '''
+        # find on local machine
+        offer_owner = self.getOfferByToken(offerToken)
+
+        if username == offer_owner:
+            raise sisterexceptions.OfferException('you cannot accept item you offer')
+
+        if offer_owner:
+            # on local server
+            offerDetails = self.accept(offerToken)
+
+        else:
+            # on foreign server
+            offerDetails = self.foreignOffers.accept(offerToken)
+        # TODO we need to check for inventory before sending accept
+
+        # change user inventory
+        record = self.getRecordByName(username)
+        record['inventory'][offerDetails[0]] -= offerDetails[1]
+        record['inventory'][offerDetails[2]] += offerDetails[3]
+        offers = self.registeredUser[username]['offers'][offerToken]
+        offeredItem = offers[0]
+        numOfferedItem = offers[1]
+        demandItem = offers[2]
+        numDemandItem = offers[3]
+        availability = offers[4]
+        if availability:
+            if self.registeredUser[username]['inventory'][demandItem] > numDemandItem:
+                self.registeredUser[username]['inventory'][offeredItem] += numOfferedItem
+                self.registeredUser[username]['inventory'][demandItem] -= numDemandItem
+            else:
+                raise OfferException('you have not enough the demanded item')
+        else:
+            raise OfferException('offered not available anymore')
+
+
     def accept(self, offerToken):
+        '''
+        Accept a local offer.
+        '''
         username = self.allOffers.get(offerToken)
         if username:
             if self.registeredUser[username]['offers'][offerToken][4]:
@@ -441,7 +400,7 @@ class SisterServerLogic():
 
         # ASSUME only return available offers
         return tuple(tuple(val[:-1]) + (key,) for key, val
-               in self.getOffers() if val[0] == item and val[4])
+               in self.getOffersByName() if val[0] == item and val[4])
 
     def fetchItem(self, token, offer_token):
         username = self.loggedUser.get(token)
@@ -559,17 +518,24 @@ class SisterServerLogic():
     def addOffer(self, username, offerToken, offeredItem, n1, demandedItem, n2, availability):
         self.allOffers[offerToken] = [offeredItem, n1, demandedItem, n2, availability, username]
 
-
-    def getOffers(self, username):
+    def getOfferByToken(self, offerToken):
         '''
-        Get offers for a username.
+        Get local offer by offerToken.
+        :param offerToken: string
+        :return: (offeredItem, n1, demandedItem, n2, availability, offerToken)
+        '''
+        return self.allOffers.get(offerToken)
+
+    def getOffersByName(self, username):
+        '''
+        Get local offers for a username.
         :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
         '''
         return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items() if val[-1] == username)
 
     def getAllOffers(self):
         '''
-        Get all offers.
+        Get all local offers.
         :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
         '''
         return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items())

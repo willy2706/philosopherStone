@@ -166,7 +166,7 @@ class SisterServerLogic():
 
     def validateIndexItem (self, index):
         if (index < 0 or index > 9):
-            raise IndexItemException ('invalid item')
+            raise IndexItemException('invalid item')
 
     def synchronizeInventories(self):
         for i in range (0,10):
@@ -211,7 +211,7 @@ class SisterServerLogic():
     -> UsernameException
     '''
     def login(self, name, password):
-        mRecord = self.getUserByName(name)
+        mRecord = self.getRecordByName(name)
 
         if mRecord.get('password') != hashlib.md5(password).hexdigest():
             raise UsernameException('username/password combination is not found')
@@ -223,14 +223,16 @@ class SisterServerLogic():
         return (token, 0, 0, unixTime)
 
     '''
-    Get the inventory of a user.
-    throwable: IndexItemException.
+    Get the inventory of a token.
     '''
     def getInventory(self, token):
         username = self.getNameByToken(token)
 
         return self.getInventory0(username)
 
+    '''
+    Get the inventory of a user.
+    '''
     def getInventory0(self, username):
         return self.registeredUser[username].get('inventory')
 
@@ -241,17 +243,75 @@ class SisterServerLogic():
         '''
 
     '''
+    Mix 2 categories with 3 each to 1 higher quality item.
+    throwable: IndexItemException, TokenException, MixtureException.
+    '''
+    def mixItem (self, token, item1, item2):
+        self.validateIndexItem(item1)
+        self.validateIndexItem(item2)
+
+        username = self.getNameByToken(token)
+        record = self.getRecordByName(username)
+        mInventory = record.get('inventory')
+
+        if mInventory.get(item1) < 3:
+            raise MixtureException('first item is not enough')
+        if mInventory.get(item2) < 3:
+            raise MixtureException('second item is not enough')
+
+        numItem1 = mInventory.get(item1) - 3 #item 1 jumlahnya kurang 3
+        numItem2 = mInventory.get(item2) - 3 #item 2 jumlahnya kurang 3
+
+        itemRes = self.processMix(item1, item2) # dapatkan index item hasil penggabungan, ini ada potensi throw exception
+
+        numItemRes = mInventory.get(itemRes) + 1 #item hasil gabung jumlahnya kurang 3
+
+        mInventory[item1] = numItem1
+        mInventory[item2] = numItem2
+        mInventory[itemRes] = numItemRes
+
+        self.updateRecord(username, {'inventory':mInventory})
+        return numItemRes
+
+    '''
     Returns the name, width, and height of the map in this server.
     '''
     def getMap(self, token):
-        if token not in self.loggedUser:
-            raise TokenException('invalid token')
+        self.getNameByToken(token)
 
         name = self.gameMap['name']
         width = self.gameMap['width']
         height = self.gameMap['height']
         return (name, width, height)
-        
+
+    '''
+    Move a user.
+    Possible Exceptions: TokenException
+    '''
+    def move(self, token, x, y):
+        username = self.getNameByToken(token)
+
+        unixTime = calendar.timegm(time.gmtime())
+        self.updateRecord(username, {'x':x,'y':y})
+        return unixTime
+
+    '''
+    Collect item from current position.
+    Possible Exceptions: TokenException
+    '''
+    def field(self, token):
+        username = self.getNameByToken(token)
+
+        mRecord = self.getRecordByName(username)
+
+        x = mRecord.get('x')
+        y = mRecord.get('y')
+        nameItem = self.gameMap.get('map')[x][y]
+        index = self.mappingNameItemToIndex(nameItem)
+        mRecord['inventory'][index] += 1
+
+        self.updateField(username, mRecord)
+
     '''
     Load map from file containg a JSON, on current directory.
     '''
@@ -350,31 +410,6 @@ class SisterServerLogic():
     
 
 
-    '''
-    Mix 2 categories with 3 each to 1
-    throwable: IndexItemException, TokenException, MixtureException.
-    '''
-    def mixItem (self, token, item1, item2):
-        username = self.loggedUser.get(token)
-        if username:
-            self.validateIndexItem(item1)
-            self.validateIndexItem(item2)
-            res = c.execute("SELECT * FROM users WHERE username = " + username).fetchone()
-            if res[item1+2] < 3: #2 karena R11 ada di kolom 2 di database, index 0 == kolom 2
-                raise MixtureException('first item is not enough')
-            elif res[item2+2] < 3:
-                raise MixtureException('second item is not enough')
-            else:
-                numItem1 = res[item1+2] - 3 #item 1 jumlahnya kurang 3
-                numItem2 = res[item2+2] - 3 #item 2 jumlahnya kurang 3
-                itemRes = self.processMix(item1, item2) # dapatkan index item hasil penggabungan, ini ada potensi throw exception
-                numItemRes = res[itemRes+2] + 1 #item hasil gabung jumlahnya kurang 3
-                c.execute("UPDATE users SET " + mappingIndexItemToName[item1] + " = " + numItem1 + ", " + mappingIndexItemToName[item2] + " = " + numItem2 + ", " + mappingIndexItemToName[itemRes] + " = " + numItemRes + " WHERE username = " + username)
-                conn.commit()
-                self.synchronizeInventories()
-                return numItemRes
-        else:
-            raise TokenException('invalid token')
 
     '''
     Find an item that requested from client
@@ -457,27 +492,9 @@ class SisterServerLogic():
         else:
             raise TokenException('invalid token')
 
-    def move(self, token, x, y):
-        username = self.loggedUser.get(token)
-        if username:
-            unixTime = calendar.timegm(time.gmtime())
 
-            self.registeredUser[username]['x'] = x
-            self.registeredUser[username]['y'] = y
-            return unixTime
-        else:
-            raise TokenException('invalid token')    
 
-    def field(self, token):
-        username = self.loggedUser.get(token)
-        if username:
-            x = self.registeredUser[username]['x']
-            y = self.registeredUser[username]['y']
-            nameItem = self.gameMap['map'][x][y]
-            index = self.mappingNameItemToIndex(nameItem)
-            self.registeredUser[username]['inventory'][index] += 1
-        else:
-            raise TokenException('invalid token')
+
 
     '''
     Check whether username is registered within the system.
@@ -514,6 +531,10 @@ class SisterServerLogic():
     '''
     def updateRecord(self, username, updated):
         self.registeredUser.update(updated)
+
+        #c.execute("UPDATE users SET " + mappingIndexItemToName[item1] + " = " + numItem1 + ", " + mappingIndexItemToName[item2] + " = " + numItem2 + ", " + mappingIndexItemToName[itemRes] + " = " + numItemRes + " WHERE username = " + username)
+        #conn.commit()
+        #self.synchronizeInventories()
 
     '''
     Get the username of a userToken.

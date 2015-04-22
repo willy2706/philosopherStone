@@ -16,7 +16,8 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             if self.containsValidJSON(everything):
                 break
 
-        print 'Everything:', everything
+        #debug
+        print 'Request:', everything
         mJSON = json.loads(everything)
 
         # process the request
@@ -78,6 +79,20 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
 
+        elif method == 'mixitem':
+            try:
+                res = serverLogic.mixItem(mJSON['token'], mJSON['item1'], mJSON['item2'])
+                toSend['status'] = 'ok'
+                toSend['item'] = res
+
+            except (sister.TokenException, sister.MixtureException, sister.IndexItemException) as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
         elif method == 'map':
             # process map request
             try:
@@ -91,6 +106,34 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'fail'
                 toSend['description'] = str(e)
             
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
+        elif method == 'move':
+            try:
+                time = serverLogic.move(mJSON['token'], mJSON['x'], mJSON['y'])
+                toSend['status'] = 'ok'
+                toSend['time'] = time
+
+            except sister.TokenException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
+        elif method == 'field':
+            try:
+                item = serverLogic.field(mJSON['token'])
+                toSend['status'] = 'ok'
+                toSend['item'] = item
+
+            except sister.TokenException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
             except Exception as e:
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
@@ -138,18 +181,6 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
 
-        elif method == 'mixitem':
-            try:
-                res = serverLogic.mixItem(mJSON['token'],mJSON['item1'],mJSON['item2'])
-                toSend['status'] = 'ok'
-                toSend['item'] = res
-            except (sister.TokenException, sister.MixtureException, sister.IndexItemException) as e :
-                toSend['status'] = 'fail'
-                toSend['description'] = e
-            except Exception as e:
-                toSend['status'] = 'error'
-                toSend['description'] = 'e'
-
         elif method == 'sendfind':
             try:
                 res = serverLogic.sendFind(mJSON['token'], mJSON['item'])
@@ -184,34 +215,14 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'error'
                 toSend['description'] = e
 
-        elif method == 'move':
-            try:
-                time = serverLogic.move(mJSON['token'], mJSON['x'], mJSON['y'])
-                toSend['status'] = 'ok'
-                toSend['time'] = time
-            except sister.TokenException as e:
-                toSend['status'] = 'fail'
-                toSend['description'] = e
-            except Exception as e:
-                toSend['status'] = 'error'
-                toSend['description'] = e
 
-        elif method == 'field':
-            try:
-                item = serverLogic.field(mJSON['token'])
-                toSend['status'] = 'ok'
-                toSend['item'] = item
-            except sister.TokenException as e:
-                toSend['status'] = 'fail'
-                toSend['description'] = e
-            except Exception as e:
-                toSend['status'] = 'error'
-                toSend['description'] = e        
 
         # send response to client
         sToSend = json.dumps(toSend)
 
         self.request.sendall(sToSend)
+        # debug mode
+        print 'Response:', sToSend
         
 
     '''

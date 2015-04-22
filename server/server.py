@@ -16,7 +16,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             if self.containsValidJSON(everything):
                 break
 
-        print 'Everthing:', everything
+        print 'Everything:', everything
         mJSON = json.loads(everything)
 
         # process the request

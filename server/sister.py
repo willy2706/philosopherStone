@@ -504,8 +504,6 @@ class SisterServerLogic():
     Possible Exceptions: UsernameException
     '''
     def getRecordByName(self, username):
-        # TODO: masukkan ke memory
-        # record = self.registeredUser.get(username)
         res = self.c.execute("SELECT * FROM users WHERE username = '" + username + "'").fetchone()
         record = {}
         record['x'] = res[12]

@@ -29,6 +29,7 @@ Implementasi:
 
 Testing:
 --------
+02. Login         : DONE
 
 Design database:
 ----------------

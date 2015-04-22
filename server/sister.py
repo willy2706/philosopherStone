@@ -4,6 +4,8 @@ import calendar
 import json
 import sqlite3
 import random
+import socket
+import foreignOffers
 
 '''
 The Exception raised when the server is having problem with usernames.
@@ -80,6 +82,7 @@ Instance objects:
    -> n2
    -> availability
    -> username
+
 -> salt: string appended to be hashed
 -> servers: list of map
    -> ip: string
@@ -190,12 +193,13 @@ class SisterServerLogic():
         self.loadMap('map.json')
         self.salt = 'mi0IUsW4'
         self.allOffers = {}
+        self.foreignOffers = foreignOffers.ServerDealer()
 
     '''
     Set the list of servers
     '''
     def serverStatus(self, servers):
-        self.servers = servers
+        self.foreignOffers.setServers(servers)
 
     '''
     Signup a user.
@@ -218,7 +222,7 @@ class SisterServerLogic():
         if mRecord.get('password') != hashlib.md5(password).hexdigest():
             raise UsernameException('username/password combination is not found')
 
-        unixTime = calendar.timegm(time.gmtime())
+        unixTime = self.getCurrentTime()
         token = hashlib.md5(name).hexdigest()
 
         self.setLogin(token, name)
@@ -293,7 +297,7 @@ class SisterServerLogic():
     def move(self, token, x, y):
         username = self.getNameByToken(token)
 
-        unixTime = calendar.timegm(time.gmtime())
+        unixTime = self.getCurrentTime()
         self.updateRecord(username, {'x':x,'y':y})
         return unixTime
 
@@ -351,7 +355,7 @@ class SisterServerLogic():
         #    userOffers = {}
 
         # generate offer
-        unixTime = calendar.timegm(time.gmtime())
+        unixTime = self.getCurrentTime()
         lOfferToken = [token, str(unixTime)]
         lOfferToken += [self.salt, str(random.randint(-2147483648, 2147483647))]
         lOfferToken += [chr(ord('A')+offeredItem), str(n1)]
@@ -362,12 +366,13 @@ class SisterServerLogic():
         # userOffers[offerToken] = [offeredItem, n1, demandedItem, n2, True]
         # allOffers[offerToken] = username
 
-    '''
-    Accept an offer from client.
-    '''
+
     def sendAccept(self, token, offerToken):
+        '''
+        Accept an offer from client.
+        '''
         #TODO gabung dengan accept
-        username = self.loggedUser.get(token)
+        username = self.getNameByToken(token)
         retTup = {}
         if username:
             username_offers = self.allOffers.get(offerToken)
@@ -414,33 +419,29 @@ class SisterServerLogic():
     '''
     def sendFind (self, token, item):
         #TODO gabung dengan find offer
+        self.validateIndexItem(item)
         username = self.getNameByToken(token)
 
-        retTup = []
-        self.validateIndexItem(item1)
-        for un, m in self.registeredUser:
-            if un != username: #kan mau nya find offer yang bukan punya dia
-                offerLists = m['offers']
-                for offerToken, offers in offerLists:
-                    if (offers[0] == item and offers[4] == True):
-                        tup1 = offers + (key,)
-                        retTup = retTup + (tup,)
-                return retTup
+        # get local server offers
+        res = [tuple(val[:-1]) + (key,) for key, val
+               in self.allOffers.items() if val[0] == item and val[-1] != username]
 
-    '''
-    Find an item that requested from server
-    throwable: IndexItemException, MixtureException.
-    '''
+        res += self.foreignOffers.findOffers(item)
+
+        return res
+
     def findOffer (self, item):
-        retTup = {}
-        self.validateIndexItem(item1)
-        for un, m in self.registeredUser:
-            offerLists = m['offers']
-            for offerToken, offers in offerLists:
-                if (offers[0] == item and offers[4] == True):
-                    tup1 = offers + (key,)
-                    retTup = retTup + (tup,)
-            return retTup
+        '''
+        Find an item on local server.
+        This is only called from servers.
+        throwable: IndexItemException
+        :return: tuple of (offeredItem, n1, demandedItem, n2, availability)
+        '''
+        self.validateIndexItem(item)
+
+        # ASSUME only return available offers
+        return tuple(tuple(val[:-1]) + (key,) for key, val
+               in self.getOffers() if val[0] == item and val[4])
 
     def fetchItem(self, token, offer_token):
         username = self.loggedUser.get(token)
@@ -549,9 +550,17 @@ class SisterServerLogic():
     def addOffer(self, username, offerToken, offeredItem, n1, demandedItem, n2, availability):
         self.allOffers[offerToken] = [offeredItem, n1, demandedItem, n2, availability, username]
 
-    '''
-    Get offers for a username.
-    '''
+
     def getOffers(self, username):
-        return tuple(tuple(val[:-1]) + (key,) for key, val in
-              self.allOffers.items() if val[-1] == username)
+        '''
+        Get offers for a username.
+        :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
+        '''
+        return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items() if val[-1] == username)
+
+    def getAllOffers(self):
+        '''
+        Get all offers.
+        :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
+        '''
+        return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items())

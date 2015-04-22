@@ -2,6 +2,7 @@ import SocketServer
 import threading
 import json
 import sister
+import helpers
 
 serverLogic = sister.SisterServerLogic()
 
@@ -13,7 +14,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         while True:
             data = self.request.recv(4096)
             everything += data
-            if self.containsValidJSON(everything):
+            if helpers.containsValidJSON(everything):
                 break
 
         #debug
@@ -182,6 +183,35 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
 
+        elif method == 'findoffer':
+            try:
+                offers = serverLogic.findOffer(mJSON['item'])
+                toSend['status'] = 'ok'
+                toSend['offers'] = offers
+
+            except sister.IndexItemException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
+        elif method == 'sendaccept':
+            try:
+                serverLogic.sendAccept(mJSON['token'], mJSON['offer_token'])
+                toSend['status'] = 'ok'
+
+            except sister.OfferException as e:
+                toSend['status'] = 'fail'
+                toSend['description'] = str(e)
+
+            except Exception as e:
+                toSend['status'] = 'error'
+                toSend['description'] = str(e)
+
+
+
         elif method == 'accept':
             # process accept
             try:
@@ -194,8 +224,6 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             except Exception as e:
                 toSend['status'] = 'error'
                 toSend['description'] = str(e)
-
-
 
         elif method == 'fetchitem':
             try:
@@ -227,30 +255,6 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         self.request.sendall(sToSend)
         # debug mode
         print 'Response:', sToSend
-        
-
-    '''
-    Check wether data contains a valid JSON or not.
-    This function can't handle JSON with curly braces elements.
-    '''
-    def containsValidJSON(self, data):
-        balance = 0
-        found = False
-        
-        for c in data:
-            if c == '{':
-                if not found:
-                    found = True
-                balance += 1
-                
-            elif c == '}':
-                if found:
-                    balance -= 1
-                    if balance == 0:
-                        return True
-
-        return False
-    # End of containsValidJSON
 
 if __name__ == '__main__':
     import sys

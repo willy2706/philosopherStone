@@ -8,6 +8,15 @@ Environment:
 
 ===========================================
 
+data types
+----------
+lOffer:
+[offeredItem, n1, demandedItem, n2, availability, offerToken]
+tOffer:
+(offeredItem, n1, demandedItem, n2, availability, offerToken)
+offers tuple:
+tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
+
 Implementasi:
 -------------
 01. Server Status : 

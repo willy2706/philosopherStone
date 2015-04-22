@@ -38,7 +38,9 @@ Implementasi:
 
 Testing:
 --------
-02. Login         : DONE
+
+02. Signup        : DONE
+03. Login         : DONE
 
 Design database:
 ----------------

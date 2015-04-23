@@ -3,6 +3,7 @@ import json
 import sqlite3
 import random
 import os
+import helpers
 
 import foreignOffers
 import sisterexceptions
@@ -107,7 +108,7 @@ class SisterServerLogic():
         if os.path.isfile(DATABASE_FILE):
             # new database
             # database akan otomatis dibikin kalau ga ada
-            self.conn = sqlite3.connect('sister.db')
+            self.conn = sqlite3.connect('sister.db', check_same_thread = False)
 
             c = self.conn.cursor()
             c.execute("CREATE TABLE IF NOT EXISTS users (username VARCHAR(255), password VARCHAR(255) NOT NULL, "
@@ -130,6 +131,7 @@ class SisterServerLogic():
         # "INSERT INTO users(username, password) VALUES ('willy2', '%s')" % hashlib.md5('1234').hexdigest())
 
         self.loggedUser = {}
+        self.allOffers = {}
         self.loadMap('map.json')
         self.salt = 'mi0IUsW4'
         self.foreignOffers = foreignOffers.ServerDealer()
@@ -173,7 +175,7 @@ class SisterServerLogic():
         if mRecord.get('password') != hashlib.md5(password).hexdigest():
             raise sisterexceptions.UsernameException('username/password combination is not found')
 
-        unixTime = self.getCurrentTime()
+        unixTime = helpers.getCurrentTime()
         token = hashlib.md5(name).hexdigest()
 
         self.setLogin(token, name)
@@ -311,7 +313,7 @@ class SisterServerLogic():
         eachStep = 1
         timeNeeded = (abs(prevX-x) + abs(prevY-y)) * eachStep
 
-        unixTime = self.getCurrentTime() + timeNeeded
+        unixTime = helpers.getCurrentTime() + timeNeeded
         self.actionTime = unixTime
         self.updateRecord(username, {'x': x, 'y': y})
         return unixTime
@@ -370,17 +372,20 @@ class SisterServerLogic():
         username = self.getNameByToken(token)
 
         mRecord = self.getRecordByName(username)
-        numItem = mRecord['inventory'].get(offeredItem)
+        numItem = mRecord['inventory'][offeredItem]
+        print mRecord['inventory']
+        print 'aa'
+        print numItem
 
         if numItem < n1:
-            raise OfferException('insufficient')
+            raise sisterexceptions.OfferException('insufficient number of offered item')
 
         # userOffers = self.registeredUser[username].get('offers')
         # if not userOffers:
         # userOffers = {}
 
         # generate offer
-        unixTime = self.getCurrentTime()
+        unixTime = helpers.getCurrentTime()
         lOfferToken = [token, str(unixTime)]
         lOfferToken += [self.salt, str(random.randint(-2147483648, 2147483647))]
         lOfferToken += [chr(ord('A') + offeredItem), str(n1)]
@@ -513,7 +518,7 @@ class SisterServerLogic():
         """
 
         c = self.conn.cursor()
-        res = c.execute("SELECT * FROM users WHERE username = ?", username).fetchone()
+        res = c.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
         return res != None
 
     def registerUserWithPassword(self, username, password):
@@ -530,7 +535,7 @@ class SisterServerLogic():
         # save to database
         c = self.conn.cursor()
         c.execute("INSERT INTO users(username, password) VALUES (?, ?)", (username, hashlib.md5(password).hexdigest()))
-        c.commit()
+        self.conn.commit()
 
     def getRecordByName(self, username):
         """
@@ -542,7 +547,7 @@ class SisterServerLogic():
         """
 
         c = self.conn.cursor()
-        res = c.execute("SELECT * FROM users WHERE username = ?", username).fetchone()
+        res = c.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
         if res == None:
             return sisterexceptions.UsernameException('username not found in database')
 
@@ -580,6 +585,7 @@ class SisterServerLogic():
         """
         Get the username of a userToken.
         """
+        # print result
         result = self.loggedUser.get(token)
         if result:
             return result
@@ -592,7 +598,10 @@ class SisterServerLogic():
         Add an offer to the system.
         """
         self.allOffers[offerToken] = [offeredItem, n1, demandedItem, n2, availability, username]
-
+        c = self.conn.cursor()
+                # c.execute("INSERT INTO users(username, password) VALUES (?, ?)", (username, hashlib.md5(password).hexdigest()))
+        res = c.execute("INSERT INTO offers (offer_token, username, offered_item, num_offered_item, demanded_item, num_demanded_item, availability) VALUES (?,?,?,?,?,?,?)", (offerToken, username, offeredItem, n1, demandedItem, n2, availability))
+        self.conn.commit()
 
     def getOfferByToken(self, offerToken):
         """

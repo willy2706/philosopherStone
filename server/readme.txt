@@ -28,14 +28,14 @@ gameMap:
 Implementasi:
 -------------
 01. Server Status : 
-02. Signup        : 80%, Eric belum dihubungkan dengan database dan belum ditest
-03. Login Eric    : 70%, Eric masih ada issues dan belum ditest
+02. Signup        : 100%
+03. Login Eric    : 100%
 04. Inventory     : 90%, Willy belum testing endpoint dan database
 05. MixItem       : 90%, Willy belim testing endpoint dan database
 06. Map           : 90%, Eric belum ditest
 07. Move          : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 08. Field         : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
-09. Offer         : 80%, Eric belum dihubungkan dengan database dan belum ditest
+09. Offer         : 100%
 10. Tradebox      : 90%, Eric belum ditest
 11. SendFind      : 60%, Willy belum testing endpoint dan database, belum dihubungkan dengan database, belum dengan server lain
 12. FindOffer     : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
@@ -49,6 +49,7 @@ Testing:
 
 02. Signup        : DONE
 03. Login         : DONE
+09. Offer         : DONE
 
 Design database:
 ----------------

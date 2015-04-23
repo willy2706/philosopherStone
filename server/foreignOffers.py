@@ -131,7 +131,7 @@ class ServerDealer():
         '''
         self.servers = servers
 
-    def accept(self, offerToken, timeout=3):
+    def accept(self, offerToken, inventory, timeout=3):
         '''
         Send accept to other server.
         :param offerToken: string
@@ -142,6 +142,14 @@ class ServerDealer():
         for key, record in self.foreignOffers.items():
             offers = record['offers']
             if offerToken in offers:
+                # check whether inventory have enough stuff
+                offer = offers[offerToken]
+
+                if inventory[offer[2]] < offer[3]:
+                    # the number of item in inventory is not enough.
+                    raise sisterexceptions.OfferException("you don't have enough item %s"%
+                                                      self.mappingIndexItemToName(offer[2]))
+
                 # send accept to other server
                 toSend = {}
                 toSend['method'] = 'accept'
@@ -167,7 +175,8 @@ class ServerDealer():
                 status = mJSON['status']
 
                 # raise exception if not ok
-                raise sisterexceptions.OfferException('offer no longer available')
+                if status != 'ok':
+                    raise sisterexceptions.OfferException('offer no longer available')
 
                 found = True
                 break

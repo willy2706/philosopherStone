@@ -1,7 +1,7 @@
 class UsernameException(Exception):
-    '''
+    """
     The Exception raised when the server is having problem with usernames.
-    '''
+    """
 
     def __init__(self, value):
         self.value = value
@@ -11,9 +11,9 @@ class UsernameException(Exception):
 
 
 class TokenException(Exception):
-    '''
+    """
     The Exception raised when the server is having problem with tokens.
-    '''
+    """
 
     def __init__(self, value):
         self.value = value
@@ -23,9 +23,9 @@ class TokenException(Exception):
 
 
 class OfferException(Exception):
-    '''
+    """
     The Exception raised when the server is having problem with offers.
-    '''
+    """
 
     def __init__(self, value):
         self.value = value
@@ -35,9 +35,9 @@ class OfferException(Exception):
 
 
 class MixtureException(Exception):
-    '''
+    """
     The Exception raised when the server is having problem with mixture.
-    '''
+    """
 
     def __init__(self, value):
         self.value = value
@@ -47,9 +47,21 @@ class MixtureException(Exception):
 
 
 class IndexItemException(Exception):
-    '''
+    """
     The Exception raised when the server is having problem with item's index.
-    '''
+    """
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return self.value
+
+
+class MoveException(Exception):
+    """
+    The exception raised when user try to move to invalid location.
+    """
 
     def __init__(self, value):
         self.value = value

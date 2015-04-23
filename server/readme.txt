@@ -16,6 +16,14 @@ tOffer:
 (offeredItem, n1, demandedItem, n2, availability, offerToken)
 offers tuple:
 tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
+localOffer list:
+map of offerToken -> [offeredItem, n1, demandedItem, n2, availability, username]
+inventory list:
+[n0, n1, n2, n3, n4, n5, n6, n7, n8, n9]
+userRecord:
+{'x': int, 'y': int, 'password': string, 'inventory': <inventory list>}
+gameMap:
+{'name', 'width', 'height', 'map': matrix}
 
 Implementasi:
 -------------

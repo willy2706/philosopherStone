@@ -106,14 +106,11 @@ class SisterServerLogic():
         :exception: UsernameException
         """
         mRecord = self.getRecordByName(name)
-        print 'asdf'
-        print mRecord
+
         if mRecord.get('password') != hashlib.md5(password).hexdigest():
             raise sisterexceptions.UsernameException('username/password combination is not found')
-        print 'asdf'
-        print 'a'
+        
         unixTime = mRecord.get('actionTime')
-        print 'aaa'
         token = hashlib.md5(name).hexdigest()
 
         self.setLogin(token, name)
@@ -306,9 +303,6 @@ class SisterServerLogic():
 
         mRecord = self.getRecordByName(username)
         numItem = mRecord['inventory'][offeredItem]
-        print mRecord['inventory']
-        print 'aa'
-        print numItem
 
         if numItem < n1:
             raise sisterexceptions.OfferException('insufficient number of offered item')

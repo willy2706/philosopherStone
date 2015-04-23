@@ -1,0 +1,284 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.sisteritb.philosopherstone.scenes.InventoryScene">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_weight="1"
+        android:baselineAligned="false">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:padding="@dimen/abc_control_padding_material">
+
+            <ImageView
+                android:id="@+id/item0Image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/honey"
+                android:onClick="imageClick"/>
+
+            <TextView
+                android:id="@+id/item0TextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:background="#fffff967"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="#000000" />
+
+            <ImageView
+                android:id="@+id/item1Image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/herbs"
+                android:onClick="imageClick"/>
+
+            <TextView
+                android:id="@+id/item1TextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:background="#fffff967"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="#000000" />
+
+            <ImageView
+                android:id="@+id/item2Image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/clay"
+                android:onClick="imageClick"/>
+
+            <TextView
+                android:id="@+id/item2TextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:background="#fffff967"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="#000000" />
+
+            <ImageView
+                android:id="@+id/item3Image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/mineral"
+                android:onClick="imageClick"/>
+
+            <TextView
+                android:id="@+id/item3TextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:background="#fffff967"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="#000000" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:padding="@dimen/abc_control_padding_material">
+
+            <ImageView
+                android:id="@+id/item4Image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/potion"
+                android:onClick="imageClick"/>
+
+            <TextView
+                android:id="@+id/item4TextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:background="#ff73ff54"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="#000000" />
+
+            <ImageView
+                android:id="@+id/item5Image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/incense"
+                android:onClick="imageClick"/>
+
+            <TextView
+                android:id="@+id/item5TextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:background="#ff73ff54"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="#000000" />
+
+            <ImageView
+                android:id="@+id/item6Image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/gems"
+                android:onClick="imageClick"/>
+
+            <TextView
+                android:id="@+id/item6TextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:background="#ff73ff54"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="#000000" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:padding="@dimen/abc_control_padding_material">
+
+            <ImageView
+                android:id="@+id/item7Image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/life_elixir"
+                android:onClick="imageClick"/>
+
+            <TextView
+                android:id="@+id/item7TextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:background="#ff769fff"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="#000000" />
+
+            <ImageView
+                android:id="@+id/item8Image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/mana_crystal"
+                android:onClick="imageClick"/>
+
+            <TextView
+                android:id="@+id/item8TextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:background="#ff769fff"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="#000000" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:padding="@dimen/abc_control_padding_material">
+
+            <ImageView
+                android:id="@+id/item9Image"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/philosopher_stone"
+                android:onClick="imageClick"/>
+
+            <TextView
+                android:id="@+id/item9TextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:background="#ffff5d5d"
+                android:gravity="center"
+                android:text="0"
+                android:textColor="#000000"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp">
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:ems="10"
+            android:id="@+id/offerAmountEditText"
+            android:hint="Offer Amount"
+            android:layout_weight="1" />
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:ems="10"
+            android:id="@+id/demandAmountEditText"
+            android:hint="Demand Amount"
+            android:layout_weight="1" />
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Offer"
+            android:onClick="offerItem"
+            android:id="@+id/offerButton"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mix Item"
+            android:id="@+id/mixItemButton"
+            android:onClick="mixItem"/>
+    </LinearLayout>
+
+
+</LinearLayout>

@@ -1,5 +1,7 @@
 package com.sisteritb.philosopherstone.connection;
 
+import android.util.Log;
+
 import com.sisteritb.philosopherstone.connection.request.CancelOfferRequest;
 import com.sisteritb.philosopherstone.connection.request.FetchItemRequest;
 import com.sisteritb.philosopherstone.connection.request.FieldRequest;
@@ -33,7 +35,7 @@ import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
 
-public class PhilosopherStoneServer {
+public class PhilosopherStoneServer{
     public static final String ERROR_MESSAGE = "Sorry, problem with server.";
     private JsonSocket socket;
 
@@ -176,7 +178,9 @@ public class PhilosopherStoneServer {
         socket.write(requestString);
         String responseString = socket.read();
         socket.close();
+        Log.d("connection", responseString);
         return responseString;
 
     }
+
 }

@@ -16,7 +16,7 @@ public class TradeOffer {
     public long demandedItem;
     public long demandedAmmount;
     public boolean availability;
-    private final String offerToken;
+    public final String offerToken;
     
     public TradeOffer(String offerToken){
         this.offerToken = offerToken;
@@ -27,7 +27,7 @@ public class TradeOffer {
         this.availability = false;
     }
     
-    public TradeOffer(String offerToken, long offeredItem, long offeredAmmount, long demandedItem, long demandedAmmount, boolean avaliablity){
+    public TradeOffer(String offerToken, long offeredItem, long offeredAmmount, long demandedItem, long demandedAmmount, boolean availability){
         
         this.offerToken = offerToken;
         this.offeredItem = offeredItem;
@@ -36,4 +36,6 @@ public class TradeOffer {
         this.demandedAmmount = demandedAmmount;
         this.availability = availability;
     }
+
+
 }

@@ -1,5 +1,7 @@
 package com.sisteritb.philosopherstone.connection;
 
+import android.util.Log;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -33,16 +35,21 @@ public class JsonSocket {
     }
 
     public void connect() throws IOException{
+        Log.d("connection", "Connecting socket to "+host+":"+port);
         socket = new Socket(host, port);
+        socket.setSoTimeout(timeout);
+        Log.d("connection", "Connected to "+host+":"+port);
     }
     public void close() throws IOException{
         socket.close();
+        Log.d("connection", "Connected closed");
     }
 
     public String read() throws IOException{
         InputStream inFromServer = socket.getInputStream();
         DataInputStream in = new DataInputStream(inFromServer);
 
+        Log.d("connection", "JsonSocket start reading");
         //find first open curly bracket
         int start, end;
         boolean found;
@@ -98,6 +105,8 @@ public class JsonSocket {
         }
         //End of finding curly bracket
 
+        Log.d("connection", "JsonSocket done reading");
+
         String jsonString = storedBuffer.substring(start, end+1);
         storedBuffer.delete(0, end+1);
 
@@ -105,9 +114,11 @@ public class JsonSocket {
     }
 
     public void write(String jsonString) throws IOException{
+        Log.d("connection", "JsonSocket start writing");
         OutputStream outToHost = socket.getOutputStream();
         DataOutputStream out = new DataOutputStream(outToHost);
         out.write(jsonString.getBytes());
+        Log.d("connection", "JsonSocket done writing");
     }
 
 }

@@ -17,8 +17,8 @@ import org.json.simple.JSONValue;
 public class MixItemRequest extends Request{
     
     public String token;
-    public int item1;
-    public int item2;
+    public long item1;
+    public long item2;
 
     public MixItemRequest() {
         method = "mixitem";

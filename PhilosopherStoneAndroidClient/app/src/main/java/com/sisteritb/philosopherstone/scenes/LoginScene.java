@@ -1,14 +1,16 @@
 package com.sisteritb.philosopherstone.scenes;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.sisteritb.philosopherstone.GameState;
 import com.sisteritb.philosopherstone.R;
 import com.sisteritb.philosopherstone.connection.JsonSocket;
 import com.sisteritb.philosopherstone.connection.PhilosopherStoneServer;
@@ -47,6 +49,7 @@ public class LoginScene extends Activity {
         Log.d("connection", "Created JsonSocket object");
 
         psServer = new PhilosopherStoneServer(jsonSocket);
+        GameState.philosopherStoneServer = psServer;
         Log.d("connection", "Created PhilosopherStoneServer");
 
         LoginRequest request = new LoginRequest();
@@ -54,8 +57,16 @@ public class LoginScene extends Activity {
         request.username = usernameText.getText().toString();
         Log.d("connection","Login request created: " + request.toString());
 
-        new LoginTask().execute(request);
-
+        if(GameState.USE_STUB){
+            Intent intent = new Intent(this, MapScene.class);
+            GameState.loginToken = "dummy";
+            GameState.location_x = 1;
+            GameState.location_y = 1;
+            GameState.arrivedTime = 142352454;
+            startActivity(intent);
+        } else {
+            new LoginTask(this).execute(request);
+        }
     }
 
     public void signupPlayer(View view) {
@@ -68,6 +79,7 @@ public class LoginScene extends Activity {
         Log.d("connection", "Created JsonSocket object");
 
         psServer = new PhilosopherStoneServer(jsonSocket);
+        GameState.philosopherStoneServer = psServer;
         Log.d("connection", "Created PhilosopherStoneServer");
 
         SignupRequest request = new SignupRequest();
@@ -80,14 +92,19 @@ public class LoginScene extends Activity {
 
     private class LoginTask extends AsyncTask<LoginRequest, Void, LoginResponse>{
 
-        ResponseFailException failException = null;
+        private ResponseFailException failException = null;
+        private Context context;
+
+        public LoginTask(Context context){
+            this.context = context;
+        }
 
         @Override
         protected LoginResponse doInBackground(LoginRequest... requests) {
             LoginResponse response = null;
             try {
                 response = psServer.send(requests[0]);
-                Log.d("connection","Login response created: " + response.toString());
+                Log.d("connection","Login response created");
             } catch (ResponseFailException e) {
                 failException = e;
                 Log.d("connection","Login fail: " + e.getMessage());
@@ -102,7 +119,12 @@ public class LoginScene extends Activity {
         protected void onPostExecute(LoginResponse response){
 
             if (response != null) {
-
+                GameState.loginToken = response.getToken();
+                GameState.location_x = response.getX();
+                GameState.location_y = response.getY();
+                GameState.arrivedTime = response.getTime();
+                Intent intent = new Intent(context, MapScene.class);
+                startActivity(intent);
             } else if (failException != null) {
                 Toast.makeText(getApplicationContext(), failException.getMessage(), Toast.LENGTH_LONG).show();
             } else {
@@ -114,14 +136,14 @@ public class LoginScene extends Activity {
 
     private class SignupTask extends AsyncTask<SignupRequest, Void, SignupResponse>{
 
-        ResponseFailException failException = null;
+        private ResponseFailException failException = null;
 
         @Override
         protected SignupResponse doInBackground(SignupRequest... requests) {
             SignupResponse response = null;
             try {
                 response = psServer.send(requests[0]);
-                Log.d("connection","Signup response created: " + response.toString());
+                Log.d("connection","Signup response created.");
             } catch (ResponseFailException e) {
                 failException = e;
                 Log.d("connection","Signup fail: " + e.getMessage());
@@ -136,7 +158,7 @@ public class LoginScene extends Activity {
         protected void onPostExecute(SignupResponse response){
 
             if (response != null) {
-
+                Toast.makeText(getApplicationContext(), "Signup success.", Toast.LENGTH_LONG).show();
             } else if (failException != null) {
                 Toast.makeText(getApplicationContext(), failException.getMessage(), Toast.LENGTH_LONG).show();
             } else {

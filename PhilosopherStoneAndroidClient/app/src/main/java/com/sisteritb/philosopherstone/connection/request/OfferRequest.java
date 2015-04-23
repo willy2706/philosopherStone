@@ -17,8 +17,8 @@ import org.json.simple.JSONValue;
 public class OfferRequest extends Request{
     
     public String token;
-    public int offeredItem, demandedItem;
-    public int offeredItemAmmount, demandedItemAmmunt;
+    public long offeredItem, demandedItem;
+    public long offeredItemAmmount, demandedItemAmmunt;
 
     public OfferRequest() {
         method = "offer";

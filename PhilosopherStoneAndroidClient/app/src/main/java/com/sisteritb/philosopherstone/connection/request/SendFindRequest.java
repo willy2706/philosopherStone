@@ -17,7 +17,7 @@ import org.json.simple.JSONValue;
 public class SendFindRequest extends Request{
     
     public String token;
-    public int item;
+    public long item;
 
     public SendFindRequest() {
         method = "sendfind";

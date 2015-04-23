@@ -615,10 +615,12 @@ class SisterServerLogic():
         """
         self.allOffers[offerToken] = [offeredItem, n1, demandedItem, n2, availability, username]
         c = self.conn.cursor()
+
         res = self.getRecordByName(username)
         numCurrOfferedItem = res['inventory'][offeredItem]
         numOfferedItemNow = numCurrOfferedItem - n1
         name = self.mappingIndexItemToName(offeredItem)
+        
         # c.execute("UPDATE users SET ? = ? WHERE username = ?", (name, numOfferedItemNow, username)) #ga jalan
         #jangan diubah kode dibawah #willy
         c.execute("UPDATE users SET "+name+" = ? WHERE username = ?", (numOfferedItemNow, username))
@@ -663,7 +665,13 @@ class SisterServerLogic():
         Get local offers for a username.
         :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
         """
-        return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items() if val[-1] == username)
+        c = self.conn.cursor()
+        res = c.execute("SELECT * FROM offers WHERE username = ?", (username,))
+        
+        return tuple([row[2], row[3], row[4], row[5], True if row[6] == 1 else False, row[0]] for row in res)
+        # return [row[2], row[3], row[4], row[5], True if row[6] == 1 else False, row[0]]
+        
+        # return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items() if val[-1] == username)
 
 
     def getAllOffers(self):

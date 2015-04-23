@@ -36,7 +36,7 @@ Implementasi:
 07. Move          : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 08. Field         : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 09. Offer         : 100%
-10. Tradebox      : 90%, Eric belum ditest
+10. Tradebox      : 100%
 11. SendFind      : 60%, Willy belum testing endpoint dan database, belum dihubungkan dengan database, belum dengan server lain
 12. FindOffer     : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 13. SendAccept    : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
@@ -50,6 +50,7 @@ Testing:
 02. Signup        : DONE
 03. Login         : DONE
 09. Offer         : DONE
+10. Tradebox      : DONE
 
 Design database:
 ----------------
@@ -131,7 +132,7 @@ Secara umum berikut langkah kerja yang akan anda lakukan dalam pengerjaan fitur:
 Notes tgl 23 April 2015
 -----------------------
 Willy, tolong bantu sempurna endpoint berikut (bukan testing, tapi coding):
-endpoint 9 (DONE), endpoint 10, endpoint 12, endpoint 14, endpoint 15, dan endpoint 16.
+endpoint 9 (DONE), endpoint 10 (DONE), endpoint 12, endpoint 14, endpoint 15, dan endpoint 16.
 
 Tolong dipahami dan disempurnakan. Logikanya secara garis besar uda w buat. Sempurnakan juga method-method yang
 berhubungan dengan endpoint-endpoint tersebut misalnya method database updateRecord, dan lain-lain.

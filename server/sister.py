@@ -2,6 +2,7 @@ import hashlib
 import json
 import sqlite3
 import random
+import helpers
 import os
 
 import foreignOffers
@@ -15,8 +16,6 @@ class SisterServerLogic():
     """
     The Logic of Server.
     Instance objects:
-    -> registeredUser: map of username @ map
-
     -> loggedUser: map of token @ username
     -> gameMap: {'name', 'width', 'height', 'map': matrix}
     -> allOffers: map offerToken @ list
@@ -35,70 +34,6 @@ class SisterServerLogic():
     -> actionTime: int, you can only move / fetch after this time
     """
 
-    def printUser(self):
-        res = c.execute("SELECT * FROM users")
-        for row in res:
-            print row[0]
-            print row[1]
-
-    def getUser(self, username):
-        res = c.execute("SELECT * FROM users WHERE username = " + username).fetchone()
-        return res
-
-
-
-    def mappingIndexItemToName(self, index):
-        if index == 0:
-            return 'R11'
-        elif index == 1:
-            return 'R12'
-        elif index == 2:
-            return 'R13'
-        elif index == 3:
-            return 'R14'
-        elif index == 4:
-            return 'R21'
-        elif index == 5:
-            return 'R22'
-        elif index == 6:
-            return 'R23'
-        elif index == 7:
-            return 'R31'
-        elif index == 8:
-            return 'R32'
-        elif index == 9:
-            return 'R41'
-
-    def mappingNameItemToIndex(self, name):
-        if name == 'R11':
-            return 0
-        elif name == 'R12':
-            return 1
-        elif name == 'R13':
-            return 2
-        elif name == 'R14':
-            return 3
-        elif name == 'R21':
-            return 4
-        elif name == 'R22':
-            return 5
-        elif name == 'R23':
-            return 6
-        elif name == 'R31':
-            return 7
-        elif name == 'R32':
-            return 8
-        elif name == 'R41':
-            return 9
-
-    def validateIndexItem(self, index):
-        if (index < 0 or index > 9):
-            raise IndexItemException('invalid item')
-
-    def synchronizeInventories(self):
-        for i in range(0, 10):
-            self.registeredUser[username]['inventory'][i] = res[i + 2]
-
     def __init__(self):
         """
         Initialize the serverLogic.
@@ -115,7 +50,7 @@ class SisterServerLogic():
                       "R14 INT NOT NULL DEFAULT 0, R21 INT NOT NULL DEFAULT 0, R22 INT NOT NULL DEFAULT 0, "
                       "R23 INT NOT NULL DEFAULT 0, R31 INT NOT NULL DEFAULT 0, R32 INT NOT NULL DEFAULT 0, "
                       "R41 INT NOT NULL DEFAULT 0, X INT NOT NULL DEFAULT 0, Y INT NOT NULL DEFAULT 0, "
-                      "PRIMARY KEY(username))")
+                      "action_time INT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY(username))")
             c.execute("CREATE TABLE IF NOT EXISTS offers (offer_token VARCHAR(255), username VARCHAR(255) NOT NULL, "
                       "offered_item INT NOT NULL, num_offered_item INT NOT NULL, demanded_item INT NOT NULL, "
                       "num_demanded_item INT NOT NULL, availability TINYINT NOT NULL, PRIMARY KEY(offer_token), "
@@ -173,7 +108,7 @@ class SisterServerLogic():
         if mRecord.get('password') != hashlib.md5(password).hexdigest():
             raise sisterexceptions.UsernameException('username/password combination is not found')
 
-        unixTime = self.getCurrentTime()
+        unixTime = mRecord.get('actionTime')
         token = hashlib.md5(name).hexdigest()
 
         self.setLogin(token, name)
@@ -292,7 +227,7 @@ class SisterServerLogic():
         :param x: int
         :param y: int
         :return: int, completion time in unix time
-        :exception: TokenException, P
+        :exception: TokenException, MoveException
         """
 
         username = self.getNameByToken(userToken)
@@ -307,13 +242,17 @@ class SisterServerLogic():
         if prevX == x and prevY == y:
             raise sisterexceptions.MoveException('invalid move')
 
+        currTime = helpers.getCurrentTime()
+        if record.get('actionTime') > currTime:
+            raise sisterexceptions.MoveException('you are still moving')
+
         # time in seconds
         eachStep = 1
         timeNeeded = (abs(prevX-x) + abs(prevY-y)) * eachStep
 
-        unixTime = self.getCurrentTime() + timeNeeded
+        unixTime = currTime + timeNeeded
         self.actionTime = unixTime
-        self.updateRecord(username, {'x': x, 'y': y})
+        self.updateRecord(username, {'x': x, 'y': y, 'actionTime': unixTime})
         return unixTime
 
     def field(self, userToken):
@@ -325,11 +264,12 @@ class SisterServerLogic():
         :exception: TokenException
         """
 
-        # TODO: add action time
-
         username = self.getNameByToken(userToken)
 
         mRecord = self.getRecordByName(username)
+
+        if mRecord.get('actionTime') > helpers.getCurrentTime():
+            raise sisterexceptions.MoveException('you are still moving')
 
         x = mRecord.get('x')
         y = mRecord.get('y')
@@ -340,16 +280,6 @@ class SisterServerLogic():
         self.updateField(username, mRecord)
 
 
-
-    def loadMap(self, filename):
-        """
-        Load map from file containg a JSON, on current directory.
-        """
-        mapFile = open(filename, 'r+')
-        mapText = mapFile.read()
-        mapFile.close()
-
-        self.gameMap = json.loads(mapText)
 
     """
     Get all trade for a user token.
@@ -391,20 +321,25 @@ class SisterServerLogic():
         # userOffers[offerToken] = [offeredItem, n1, demandedItem, n2, True]
         # allOffers[offerToken] = username
 
-    """
-    Find an item that requested from client
-    throwable: IndexItemException, TokenException, MixtureException.
-    """
 
-    def sendFind(self, token, item):
-        # TODO gabung dengan find offer
+
+    def sendFind(self, userToken, item):
+        """
+        Find an item from all servers.
+
+        :param userToken: string
+        :param item: int
+        :return: list of (offeredItem, n1, demandedItem, n2, availability, offerToken)
+        :exception: IndexItemException, TokenException, MixtureException.
+        """
         self.validateIndexItem(item)
-        username = self.getNameByToken(token)
+        username = self.getNameByToken(userToken)
 
         # get local server offers
-        res = [tuple(val[:-1]) + (key,) for key, val
-               in self.allOffers.items() if val[0] == item and val[-1] != username]
+        res = [tuple(val[:-1]) + (key,) for key, val in self.getAllOffers().items()
+               if val[0] == item and val[-1] != username]
 
+        # get foreign servers offers
         res += self.foreignOffers.findOffers(item)
 
         return res
@@ -424,16 +359,20 @@ class SisterServerLogic():
 
     def sendAccept(self, userToken, offerToken):
         """
-        Accept an offer from client.
+        Accept an offer, can be from other servers.
+
+        :param userToken: string
+        :param offerToken: string
+        :return: None
         """
 
         username = self.getNameByToken(userToken)
 
-        # get user inventory
-        inventory = self.getRecordByName(username).get('inventory')
-
         # find on local machine
         offer = self.getOfferByToken(offerToken)
+
+        # get user inventory
+        inventory = self.getRecordByName(username).get('inventory')
 
         if offer:
             # on local server
@@ -441,7 +380,6 @@ class SisterServerLogic():
                 raise sisterexceptions.OfferException('you cannot accept item you offer')
 
             if (inventory[offer[2]] < offer[3]):
-                # the number of item in inventory is not enough.
                 raise sisterexceptions.OfferException("you don't have enough item %s" %
                                                       self.mappingIndexItemToName(offer[2]))
 
@@ -449,7 +387,7 @@ class SisterServerLogic():
 
         else:
             # on foreign server
-            # TODO: delete/modify foreign record
+            # TODO: modify foreign record
             offerDetails = self.foreignOffers.accept(offerToken, inventory)
 
         # change user inventory
@@ -505,6 +443,84 @@ class SisterServerLogic():
         # remove offer
         self.deleteOfferByToken(offerToken)
 
+    def mappingIndexItemToName(self, index):
+        """
+        Return the itemCode from itemID
+        :param index: int
+        :return: string, itemCode
+        """
+        if index == 0:
+            return 'R11'
+        elif index == 1:
+            return 'R12'
+        elif index == 2:
+            return 'R13'
+        elif index == 3:
+            return 'R14'
+        elif index == 4:
+            return 'R21'
+        elif index == 5:
+            return 'R22'
+        elif index == 6:
+            return 'R23'
+        elif index == 7:
+            return 'R31'
+        elif index == 8:
+            return 'R32'
+        elif index == 9:
+            return 'R41'
+
+    def mappingNameItemToIndex(self, name):
+        """
+        Return the itemID from the itemCode
+        :param name: string
+        :return: int
+        """
+        if name == 'R11':
+            return 0
+        elif name == 'R12':
+            return 1
+        elif name == 'R13':
+            return 2
+        elif name == 'R14':
+            return 3
+        elif name == 'R21':
+            return 4
+        elif name == 'R22':
+            return 5
+        elif name == 'R23':
+            return 6
+        elif name == 'R31':
+            return 7
+        elif name == 'R32':
+            return 8
+        elif name == 'R41':
+            return 9
+
+    def validateIndexItem(self, index):
+        """
+        Validate the itemID.
+        :param index: int
+        :return: None
+        :exception: IndexItemExcetpion
+        """
+        if index < 0 or index > 9:
+            raise sisterexceptions.IndexItemException('invalid item')
+
+    def loadMap(self, filename):
+        """
+        Load map from JSON file on current directory.
+        :param filename: string
+        :return: None
+        """
+
+        mapFile = open(filename, 'r+')
+        mapText = mapFile.read()
+        mapFile.close()
+
+        self.gameMap = json.loads(mapText)
+
+
     def isUsernameRegistered(self, username):
         """
         Check whether username is registered within the system.
@@ -537,7 +553,7 @@ class SisterServerLogic():
         Get record of user.
 
         :param username: string
-        :return: {'x': int, 'y': int, 'password': string, 'inventory': <inventory list>}
+        :return: {'x': int, 'y': int, 'password': string, 'inventory': <inventory list>, 'actionTime': int}
         :exception: UsernameException
         """
 
@@ -551,6 +567,7 @@ class SisterServerLogic():
         record['y'] = res[13]
         record['password'] = res[1]
         record['inventory'] = [res[i] for i in range(2, 12)]
+        record['actionTime'] = res[14]
 
         return record
 

@@ -31,12 +31,12 @@ class OffersFinder():
         self.timeout = timeout
 
     def find(self):
-        '''
+        """
         Start finding by making threads.
         @returns map addressItem (ip:string, port:int, item:int) @ map
             -> lastUpdate: timestamp
             -> offers: map offerToken @ [offeredItem, n1, demandedItem, n2, availability]
-        '''
+        """
 
         # create many TCP sockets to addresses and run each with it's own thread
         running = []
@@ -134,6 +134,7 @@ class ServerDealer():
     def accept(self, offerToken, inventory, timeout=3):
         '''
         Send accept to other server.
+
         :param offerToken: string
         :return: None
         '''
@@ -174,9 +175,13 @@ class ServerDealer():
 
                 status = mJSON['status']
 
-                # raise exception if not ok
-                if status != 'ok':
+                if status == 'fail':
+                    offers.pop(offerToken)
                     raise sisterexceptions.OfferException('offer no longer available')
+                elif status == 'ok':
+                    res = offers.pop(offerToken)
+                else:
+                    raise Exception(mJSON['description'])
 
                 found = True
                 break
@@ -184,12 +189,14 @@ class ServerDealer():
         if not found:
             raise sisterexceptions.OfferException('offer not found')
 
+        return res
+
 
     def findOffers(self, item):
-        '''
+        """
         Find Offers from foreign servers.
         :return: list of [offerid, n1, demandid, n2, availability, offerToken]
-        '''
+        """
 
         # list of servers need to be searched for offers
         toSend = []
@@ -198,12 +205,13 @@ class ServerDealer():
         res = []
 
         for address in self.servers:
-            hit = False
             addressItem = (address.get('ip'), address.get('port'), item)
             record = self.foreignOffers.get(addressItem)
+            hit = False
+
             if record:
                 # hit, check validity with timestamp
-                unixTime = self.getCurrentTime()
+                unixTime = helpers.getCurrentTime()
 
                 if unixTime < record.get('lastUpdate') + self.cacheTimeout:
                     # hit!
@@ -217,4 +225,10 @@ class ServerDealer():
                 toSend.append(addressItem[:2])
 
         oFinder = OffersFinder(toSend, item, 3)
-        self.foreignOffers.update(oFinder.find())
+        uncached = oFinder.find()
+        self.foreignOffers.update(uncached)
+
+        for uncachedRecord in uncached:
+            res += [tuple(val) + (key,) for key, val in uncachedRecord.get('offers')]
+
+        return res

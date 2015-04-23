@@ -8,30 +8,59 @@ Environment:
 
 ===========================================
 
+data types
+----------
+lOffer:
+[offeredItem, n1, demandedItem, n2, availability, offerToken]
+tOffer:
+(offeredItem, n1, demandedItem, n2, availability, offerToken)
+offers tuple:
+tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
+localOffer list:
+map of offerToken -> [offeredItem, n1, demandedItem, n2, availability, username]
+inventory list:
+[n0, n1, n2, n3, n4, n5, n6, n7, n8, n9]
+userRecord:
+{'x': int, 'y': int, 'password': string, 'inventory': <inventory list>, 'actionTime': int}
+gameMap:
+{'name', 'width', 'height', 'map': matrix}
+
 Implementasi:
 -------------
 01. Server Status : 
-02. Signup        : 80%, Eric belum dihubungkan dengan database dan belum ditest
-03. Login Eric    : 70%, Eric masih ada issues dan belum ditest
+02. Signup        : 100%
+03. Login Eric    : 100%
 04. Inventory     : 90%, Willy belum testing endpoint dan database
 05. MixItem       : 90%, Willy belim testing endpoint dan database
 06. Map           : 90%, Eric belum ditest
-07. Move          : 
-08. Field         : 
-09. Offer         : 80%, Eric belum dihubungkan dengan database dan belum ditest
-10. Tradebox      : 90%, Eric belum ditest
-11. SendFind      : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
-12. FindOffer     :
-13. SendAccept    : 
+07. Move          : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
+08. Field         : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
+09. Offer         : 100%
+10. Tradebox      : 100%
+11. SendFind      : 60%, Willy belum testing endpoint dan database, belum dihubungkan dengan database, belum dengan server lain
+12. FindOffer     : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
+13. SendAccept    : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 14. Accept        : 80%, Eric belum dihubungkan dengan database dan belum ditest
 15. FetchItem     : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 16. CancelOffer   : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 
+Testing:
+--------
+
+02. Signup        : DONE
+03. Login         : DONE
+09. Offer         : DONE
+10. Tradebox      : DONE
+
+Design database:
+----------------
+users = (<u>username</u>, password, R11, R12, R13, R14, R21, R22, R23, R31, R32, R33, R41, x, y)
+offers = (<u>offer_token</u>, offered_item, num_offered_item, demanded_item, num_demanded_item)
+
 Pembagian kerja:
 ----------------
 Eric   : 2 3 6 9 10 14
-Willy  : 1 4 5 13 15 16
-Aurelia: 7 8 11 12
+Willy  : 1 4 5 7 8 11 12 13 15 16
 
 camelCase:
 ----------
@@ -99,3 +128,14 @@ Secara umum berikut langkah kerja yang akan anda lakukan dalam pengerjaan fitur:
    diharapkan untuk mendiskusikan dengan Eric terlebih dahulu.
 
 3. Update tabel Implementasi di atas sesuai dengan progress anda.
+
+Notes tgl 23 April 2015
+-----------------------
+Willy, tolong bantu sempurna endpoint berikut (bukan testing, tapi coding):
+endpoint 9 (DONE), endpoint 10 (DONE), endpoint 12, endpoint 14, endpoint 15, dan endpoint 16.
+
+Tolong dipahami dan disempurnakan. Logikanya secara garis besar uda w buat. Sempurnakan juga method-method yang
+berhubungan dengan endpoint-endpoint tersebut misalnya method database updateRecord, dan lain-lain.
+N.B.: Kamu tidak perlu melihat yang ada di foreignOffers.py.
+
+Thanks..

@@ -63,6 +63,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['height'] = height
 
             elif method == 'move':
+                # TODO: waktu disini waktu apa? langsung gerak atau gmna? x, y nya gmna koordinat layar?
                 time = serverLogic.move(mJSON['token'], mJSON['x'], mJSON['y'])
                 toSend['time'] = time
 
@@ -98,7 +99,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             toSend['status'] = 'ok'
 
         except (sisterexceptions.OfferException, sisterexceptions.IndexItemException, sisterexceptions.MixtureException,
-                sisterexceptions.TokenException, sisterexceptions.UsernameException, sisterexceptions) as e:
+                sisterexceptions.TokenException, sisterexceptions.UsernameException) as e:
             # any custom exceptions is a failure
             toSend['status'] = 'fail'
             toSend['description'] = str(e)

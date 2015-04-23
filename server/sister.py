@@ -105,6 +105,7 @@ class SisterServerLogic():
         :return: (token, x, y, time)
         :exception: UsernameException
         """
+
         mRecord = self.getRecordByName(name)
 
         if mRecord.get('password') != hashlib.md5(password).hexdigest():
@@ -451,6 +452,7 @@ class SisterServerLogic():
         :param index: int
         :return: string, itemCode
         """
+
         if index == 0:
             return 'R11'
         elif index == 1:
@@ -561,6 +563,7 @@ class SisterServerLogic():
 
         c = self.conn.cursor()
         res = c.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+
         if res == None:
             return sisterexceptions.UsernameException('username not found in database')
 
@@ -612,8 +615,14 @@ class SisterServerLogic():
         """
         self.allOffers[offerToken] = [offeredItem, n1, demandedItem, n2, availability, username]
         c = self.conn.cursor()
-                # c.execute("INSERT INTO users(username, password) VALUES (?, ?)", (username, hashlib.md5(password).hexdigest()))
-        res = c.execute("INSERT INTO offers (offer_token, username, offered_item, num_offered_item, demanded_item, num_demanded_item, availability) VALUES (?,?,?,?,?,?,?)", (offerToken, username, offeredItem, n1, demandedItem, n2, availability))
+        res = self.getRecordByName(username)
+        numCurrOfferedItem = res['inventory'][offeredItem]
+        numOfferedItemNow = numCurrOfferedItem - n1
+        name = self.mappingIndexItemToName(offeredItem)
+        # c.execute("UPDATE users SET ? = ? WHERE username = ?", (name, numOfferedItemNow, username)) #ga jalan
+        #jangan diubah kode dibawah #willy
+        c.execute("UPDATE users SET "+name+" = ? WHERE username = ?", (numOfferedItemNow, username))
+        c.execute("INSERT INTO offers (offer_token, username, offered_item, num_offered_item, demanded_item, num_demanded_item, availability) VALUES (?,?,?,?,?,?,?)", (offerToken, username, offeredItem, n1, demandedItem, n2, availability))
         self.conn.commit()
 
     def getOfferByToken(self, offerToken):

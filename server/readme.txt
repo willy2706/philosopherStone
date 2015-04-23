@@ -126,3 +126,14 @@ Secara umum berikut langkah kerja yang akan anda lakukan dalam pengerjaan fitur:
    diharapkan untuk mendiskusikan dengan Eric terlebih dahulu.
 
 3. Update tabel Implementasi di atas sesuai dengan progress anda.
+
+Notes tgl 23 April 2015
+-----------------------
+Willy, tolong bantu sempurna endpoint berikut (bukan testing, tapi coding):
+endpoint 9, endpoint 10, endpoint 12, endpoint 14, endpoint 15, dan endpoint 16.
+
+Tolong dipahami dan disempurnakan. Logikanya secara garis besar uda w buat. Sempurnakan juga method-method yang
+berhubungan dengan endpoint-endpoint tersebut misalnya method database updateRecord, dan lain-lain.
+N.B.: Kamu tidak perlu melihat yang ada di foreignOffers.py.
+
+Thanks..

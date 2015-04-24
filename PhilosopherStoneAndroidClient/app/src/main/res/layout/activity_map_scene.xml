@@ -8,6 +8,57 @@
     tools:context="com.sisteritb.philosopherstone.scenes.MapScene">
 
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Inventory"
+            android:id="@+id/button" />
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mix Item"
+            android:id="@+id/button2" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="1">
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tradebox"
+            android:id="@+id/button3" />
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Offer"
+            android:id="@+id/button4"
+            android:layout_weight="0.09" />
+
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Find Item"
+            android:id="@+id/button5"
+            android:layout_weight="0.06" />
+    </LinearLayout>
+
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -55,8 +106,16 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal">
 
+        <Button
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="Move"
+            android:onClick="movePlayer"
+            android:id="@+id/moveButton"/>
+
         <EditText
-            android:layout_width="wrap_content"
+            android:layout_width="10dp"
             android:layout_height="wrap_content"
             android:inputType="number"
             android:ems="10"
@@ -65,7 +124,7 @@
             android:layout_weight="1" />
 
         <EditText
-            android:layout_width="wrap_content"
+            android:layout_width="10dp"
             android:layout_height="wrap_content"
             android:inputType="number"
             android:ems="10"
@@ -74,18 +133,11 @@
             android:layout_weight="1" />
 
         <Button
-            style="?android:attr/buttonStyleSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Move"
-            android:onClick="movePlayer"
-            android:id="@+id/moveButton"/>
+            android:layout_width="80dp"
+            android:layout_height="50dp"
+            android:text="Take Item Here"
+            android:onClick="takeFieldItem"
+            android:id="@+id/fieldButton"/>
     </LinearLayout>
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Take Item Here"
-        android:onClick="takeFieldItem"
-        android:id="@+id/fieldButton"/>
 </LinearLayout>

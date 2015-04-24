@@ -20,16 +20,11 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         # receive JSON from other machine (tracker/client)
         everything = ''
 
-        try:
-            while True:
-                data = self.request.recv(4096)
-                everything += data
-                if helpers.containsValidJSON(everything):
-                    break
-
-        except Exception as e:
-            print 'ada exception yang dilempar'
-            raise e
+        while True:
+            data = self.request.recv(4096)
+            everything += data
+            if helpers.containsValidJSON(everything):
+                break
 
         # debug
         print 'Request:'
@@ -46,7 +41,6 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             elif method == 'signup':
                 serverLogic.signup(mJSON['username'], mJSON['password'])
             elif method == 'login':
-                # TODO: waktu disini waktu apa?
                 token, x, y, time = serverLogic.login(mJSON['username'], mJSON['password'])
                 toSend['token'] = token
                 toSend['x'] = x

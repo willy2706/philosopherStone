@@ -52,7 +52,7 @@ class SisterServerLogic():
             self.conn.commit()
 
         else:
-            self.conn = sqlite3.connect('sister.db')
+            self.conn = sqlite3.connect('sister.db', check_same_thread=False)
 
         self.loggedUser = {}
         self.allOffers = {}
@@ -106,7 +106,7 @@ class SisterServerLogic():
         token = hashlib.md5(name).hexdigest()
 
         self.setLogin(token, name)
-        return (token, mRecord.get('x'), mRecord.get('y'), unixTime)
+        return token, mRecord.get('x'), mRecord.get('y'), unixTime
 
     def getInventory(self, userToken):
         """
@@ -550,7 +550,7 @@ class SisterServerLogic():
         # build the query depending on the updated map
         query = ''
         args = []
-        for key, val in updated:
+        for key, val in updated.items():
             if key == 'x':
                 query += 'x = ?, '
                 args.append(updated.get('x'))
@@ -579,7 +579,7 @@ class SisterServerLogic():
 
         # insert into the database
         c = self.conn.cursor()
-        c.execute(query%tuple(args))
+        c.execute(query, tuple(args))
         c.commit()
 
 

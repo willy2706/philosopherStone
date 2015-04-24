@@ -30,7 +30,7 @@ Implementasi:
 01. Server Status : 
 02. Signup        : 100%
 03. Login Eric    : 100%
-04. Inventory     : 90%, Willy belum testing endpoint dan database
+04. Inventory     : 100%
 05. MixItem       : 90%, Willy belim testing endpoint dan database
 06. Map           : 90%, Eric belum ditest
 07. Move          : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
@@ -49,6 +49,7 @@ Testing:
 
 02. Signup        : DONE
 03. Login         : DONE
+04. Inventory     : DONE
 09. Offer         : DONE
 10. Tradebox      : DONE
 15. FetchItem     : DONE
@@ -134,7 +135,7 @@ Secara umum berikut langkah kerja yang akan anda lakukan dalam pengerjaan fitur:
 Notes tgl 23 April 2015
 -----------------------
 Willy, tolong bantu sempurna endpoint berikut (bukan testing, tapi coding):
-endpoint 9 (DONE), endpoint 10 (DONE), endpoint 12, endpoint 14, endpoint 15(DONE), dan endpoint 16.
+endpoint 9 (DONE), endpoint 10 (DONE), endpoint 12, endpoint 14, endpoint 15(DONE), dan endpoint 16(DONE).
 
 Tolong dipahami dan disempurnakan. Logikanya secara garis besar uda w buat. Sempurnakan juga method-method yang
 berhubungan dengan endpoint-endpoint tersebut misalnya method database updateRecord, dan lain-lain.

@@ -4,7 +4,6 @@ import sqlite3
 import random
 import helpers
 import os
-import helpers
 
 import foreignOffers
 import sisterexceptions
@@ -125,8 +124,9 @@ class SisterServerLogic():
         """
 
         username = self.getNameByToken(userToken)
-
-        return self.getRecordByName(username).get('inventory')
+        record = self.getRecordByName(username)
+        
+        return record['inventory']
 
     def mixItem(self, userToken, item1, item2):
         """

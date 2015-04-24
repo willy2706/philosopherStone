@@ -12,7 +12,6 @@ import sisterexceptions
 
 DATABASE_FILE = 'sister.db'
 
-
 class SisterServerLogic():
     """
     The Logic of Server.
@@ -320,6 +319,7 @@ class SisterServerLogic():
         lOfferToken += [chr(ord('A') + demandedItem), str(n2)]
         offerToken = hashlib.md5(''.join(lOfferToken)).hexdigest()
 
+        #jadi di dalam add offer, otomatis uda dikurangi demanded item nya
         self.addOffer(username, offerToken, offeredItem, n1, demandedItem, n2, True)
         # userOffers[offerToken] = [offeredItem, n1, demandedItem, n2, True]
         # allOffers[offerToken] = username
@@ -412,19 +412,21 @@ class SisterServerLogic():
         Fetch the item from our accepted offer.
         Our offer must be on local server.
         """
+        
         username = self.getNameByToken(token)
         userOffer = self.getOfferByToken(offer_token)
-
-        if username != userOffer[-1]:
+        print userOffer
+        if username != userOffer[5]:
             raise sisterexceptions.OfferException("it wasn't your offer")
-
+        
         if userOffer[4]:
             raise sisterexceptions.OfferException("you cannot fetch item that hasn't been accepted")
-
+        
         # add to inventory
         record = self.getRecordByName(username)
-        record['inventory'][userOffer[2]] += userOffer[3]
-
+        self.changeInventoryItem(username, userOffer[2], record['inventory'][userOffer[2]] + userOffer[3])
+        # record['inventory'][userOffer[2]] += userOffer[3]
+        
         # delete the offer to prevent user taking the offer item multiple times
         self.deleteOfferByToken(offer_token)
 
@@ -565,7 +567,7 @@ class SisterServerLogic():
         res = c.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
 
         if res == None:
-            return sisterexceptions.UsernameException('username not found in database')
+            raise sisterexceptions.UsernameException('username not found in database')
 
         record = {}
         record['x'] = res[12]
@@ -633,11 +635,19 @@ class SisterServerLogic():
         :param offerToken: string
         :return: (offeredItem, n1, demandedItem, n2, availability, offerToken)
         """
-        res = self.allOffers.get(offerToken)
-        if res:
-            return res
-        else:
-            raise sisterexceptions.TokenException('invalid offerToken')
+        c = self.conn.cursor()
+        res = c.execute("SELECT * FROM offers WHERE offer_token = ?", (offerToken,)).fetchone()
+
+        if res == None:
+            raise sisterexceptions.OfferException('offer not found in database. token mismatch?')
+
+        return [res[2], res[3], res[4], res[5], res[6], res[1]]
+        # return record
+        # res = self.allOffers.get(offerToken)
+        # if res:
+        #     return res
+        # else:
+        #     raise sisterexceptions.TokenException('invalid offerToken')
 
 
     def updateOfferToken(self, offerToken, updates):
@@ -657,7 +667,11 @@ class SisterServerLogic():
         :param offerToken: string
         :return:
         """
-        self.allOffers.pop(offerToken)
+
+        c = self.conn.cursor()
+        c.execute("DELETE FROM offers WHERE offer_token = ?", (offerToken,))
+        self.conn.commit()
+        # self.allOffers.pop(offerToken)
 
 
     def getOffersByName(self, username):
@@ -679,4 +693,22 @@ class SisterServerLogic():
         Get all local offers.
         :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
         """
-        return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items())
+        #not tested yet
+        c = self.conn.cursor()
+        res = c.execute("SELECT * FROM offers")
+        
+        return tuple([row[2], row[3], row[4], row[5], True if row[6] == 1 else False, row[0]] for row in res)
+        # return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items())
+
+    def changeInventoryItem(self, username, index, number):
+        """
+        Change the number of item in database
+        :param index: unsigned integer
+        :param number: unsigned integer
+        :return:
+        """
+
+        c = self.conn.cursor()
+        name = self.mappingIndexItemToName(index)
+        c.execute("UPDATE users SET "+name+" = ? WHERE username = ?", (number, username))
+        self.conn.commit()

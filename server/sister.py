@@ -407,14 +407,14 @@ class SisterServerLogic():
         offer[4] = False
         self.updateOfferToken(offerToken, offer)
 
-    def fetchItem(self, token, offer_token):
+    def fetchItem(self, token, offerToken):
         """
         Fetch the item from our accepted offer.
         Our offer must be on local server.
         """
         
         username = self.getNameByToken(token)
-        userOffer = self.getOfferByToken(offer_token)
+        userOffer = self.getOfferByToken(offerToken)
         print userOffer
         if username != userOffer[5]:
             raise sisterexceptions.OfferException("it wasn't your offer")
@@ -428,7 +428,7 @@ class SisterServerLogic():
         # record['inventory'][userOffer[2]] += userOffer[3]
         
         # delete the offer to prevent user taking the offer item multiple times
-        self.deleteOfferByToken(offer_token)
+        self.deleteOfferByToken(offerToken)
 
     def cancelOffer(self, token, offerToken):
         """
@@ -439,13 +439,15 @@ class SisterServerLogic():
         username = self.getNameByToken(token)
         offer = self.getOfferByToken(offerToken)
 
-        if username != offer[-1]:
+        if username != offer[5]:
             raise sisterexceptions.OfferException("you can't cancel an offer that isn't yours")
 
         if not offer[4]:
             raise sisterexceptions.OfferException("you can't cancel an offer that is no longer available")
 
         # remove offer
+        record = self.getRecordByName(username)
+        self.changeInventoryItem(username, offer[0], record['inventory'][offer[0]] + offer[1])
         self.deleteOfferByToken(offerToken)
 
     def mappingIndexItemToName(self, index):

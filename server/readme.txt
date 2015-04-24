@@ -41,8 +41,8 @@ Implementasi:
 12. FindOffer     : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 13. SendAccept    : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
 14. Accept        : 80%, Eric belum dihubungkan dengan database dan belum ditest
-15. FetchItem     : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
-16. CancelOffer   : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
+15. FetchItem     : 100%
+16. CancelOffer   : 100%
 
 Testing:
 --------
@@ -51,6 +51,8 @@ Testing:
 03. Login         : DONE
 09. Offer         : DONE
 10. Tradebox      : DONE
+15. FetchItem     : DONE
+16. CancelOffer   : DONE
 
 Design database:
 ----------------

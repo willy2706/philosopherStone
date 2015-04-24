@@ -357,8 +357,7 @@ class SisterServerLogic():
         self.validateIndexItem(item)
 
         # ASSUME only return available offers
-        return tuple(tuple(val[:-1]) + (key,) for key, val
-                     in self.getOffersByName() if val[0] == item and val[4])
+        return tuple(row for row in self.getAllOffers() if row[0] == item and row[4])
 
     def sendAccept(self, userToken, offerToken):
         """
@@ -404,8 +403,14 @@ class SisterServerLogic():
         """
 
         offer = self.getOfferByToken(offerToken)
-        offer[4] = False
-        self.updateOfferToken(offerToken, offer)
+
+        if not offer[4]:
+            raise sisterexceptions.OfferException('the offer has been taken')
+        else:
+            self.setOfferNotAvailable(offerToken)
+        
+        # offer[4] = False
+        # self.updateOfferToken(offerToken, offer)
 
     def fetchItem(self, token, offerToken):
         """
@@ -662,6 +667,15 @@ class SisterServerLogic():
 
         self.allOffers[offerToken].update(updates)
 
+    def setOfferNotAvailable(self, offerToken):
+        """
+        set the availability to false.
+        :param offerToken: string
+        :return: None
+        """
+        c = self.conn.cursor()
+        c.execute("UPDATE offers SET availability = '0' WHERE offer_token = ?", (offerToken,))
+        self.conn.commit()
 
     def deleteOfferByToken(self, offerToken):
         """
@@ -695,7 +709,6 @@ class SisterServerLogic():
         Get all local offers.
         :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
         """
-        #not tested yet
         c = self.conn.cursor()
         res = c.execute("SELECT * FROM offers")
         

@@ -27,7 +27,7 @@ gameMap:
 
 Implementasi:
 -------------
-01. Server Status : 
+01. Server Status : 100%
 02. Signup        : 100%
 03. Login Eric    : 100%
 04. Inventory     : 100%
@@ -38,20 +38,22 @@ Implementasi:
 09. Offer         : 100%
 10. Tradebox      : 100%
 11. SendFind      : 60%, Willy belum testing endpoint dan database, belum dihubungkan dengan database, belum dengan server lain
-12. FindOffer     : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
+12. FindOffer     : 100%
 13. SendAccept    : 80%, Willy belum testing endpoint dan database, belum dihubungkan dengan database
-14. Accept        : 80%, Eric belum dihubungkan dengan database dan belum ditest
+14. Accept        : 100%
 15. FetchItem     : 100%
 16. CancelOffer   : 100%
 
 Testing:
 --------
-
+01. Server Status : NEED?
 02. Signup        : DONE
 03. Login         : DONE
 04. Inventory     : DONE
 09. Offer         : DONE
 10. Tradebox      : DONE
+12. FindOffer     : DONE
+14. Accept        : DONE
 15. FetchItem     : DONE
 16. CancelOffer   : DONE
 
@@ -135,7 +137,7 @@ Secara umum berikut langkah kerja yang akan anda lakukan dalam pengerjaan fitur:
 Notes tgl 23 April 2015
 -----------------------
 Willy, tolong bantu sempurna endpoint berikut (bukan testing, tapi coding):
-endpoint 9 (DONE), endpoint 10 (DONE), endpoint 12, endpoint 14, endpoint 15(DONE), dan endpoint 16(DONE).
+endpoint 9 (DONE), endpoint 10 (DONE), endpoint 12 (DONE), endpoint 14 (DONE) , endpoint 15 (DONE), dan endpoint 16 (DONE).
 
 Tolong dipahami dan disempurnakan. Logikanya secara garis besar uda w buat. Sempurnakan juga method-method yang
 berhubungan dengan endpoint-endpoint tersebut misalnya method database updateRecord, dan lain-lain.

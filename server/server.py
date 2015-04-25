@@ -41,11 +41,12 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             elif method == 'signup':
                 serverLogic.signup(mJSON['username'], mJSON['password'])
             elif method == 'login':
-                token, x, y, time = serverLogic.login(mJSON['username'], mJSON['password'])
+                token, x, y, actionTime, serverTime = serverLogic.login(mJSON['username'], mJSON['password'])
                 toSend['token'] = token
                 toSend['x'] = x
                 toSend['y'] = y
-                toSend['time'] = time
+                toSend['time'] = actionTime
+                toSend['serverTime'] = serverTime
 
             elif method == 'inventory':
                 res = serverLogic.getInventory(mJSON['token'])
@@ -63,8 +64,8 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
 
             elif method == 'move':
                 # TODO: waktu disini waktu apa? langsung gerak atau gmna? x, y nya gmna koordinat layar?
-                time = serverLogic.move(mJSON['token'], mJSON['x'], mJSON['y'])
-                toSend['time'] = time
+                actionTime = serverLogic.move(mJSON['token'], mJSON['x'], mJSON['y'])
+                toSend['time'] = actionTime
 
             elif method == 'field':
                 item = serverLogic.field(mJSON['token'])
@@ -104,9 +105,9 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             toSend['status'] = 'fail'
             toSend['description'] = str(e)
 
-        except Exception as e:
-            toSend['status'] = 'error'
-            toSend['description'] = str(e)
+        # except Exception as e:
+        #     toSend['status'] = 'error'
+        #     toSend['description'] = str(e)
 
         serverLogic.closeConnection()
 

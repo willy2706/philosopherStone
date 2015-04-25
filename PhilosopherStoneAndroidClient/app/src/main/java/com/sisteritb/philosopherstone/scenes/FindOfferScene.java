@@ -9,6 +9,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.sisteritb.philosopherstone.GameState;
@@ -31,8 +32,7 @@ public class FindOfferScene extends ActionBarActivity {
     private PhilosopherStoneServer psServer;
     private TradeOfferAdapter offerAdapter;
     private ListView findOfferListView;
-    private EditText findOfferEditText;
-
+    private Spinner findOfferSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,8 +41,9 @@ public class FindOfferScene extends ActionBarActivity {
 
         psServer = GameState.philosopherStoneServer;
 
-        findOfferEditText = (EditText) findViewById(R.id.findOfferItemIdEditText);
+
         findOfferListView = (ListView) findViewById(R.id.findOfferListView);
+        findOfferSpinner = (Spinner) findViewById(R.id.findItemSpinner);
         offerAdapter = new TradeOfferAdapter(this, R.layout.list_tradebox_item, new ArrayList<TradeOffer>());
         findOfferListView.setAdapter(offerAdapter);
 
@@ -82,11 +83,8 @@ public class FindOfferScene extends ActionBarActivity {
 
     public void findOfferClick(View view) {
         offerAdapter.clear();
-        String findOfferIdString = findOfferEditText.getText().toString();
-        long findOfferId = -1;
-        if (findOfferIdString.length() > 0){
-            findOfferId = Integer.parseInt(findOfferIdString);
-        }
+        long findOfferId = findOfferSpinner.getSelectedItemPosition();
+
         if(findOfferId>=0 && findOfferId <10){
             findItem(findOfferId);
         } else {

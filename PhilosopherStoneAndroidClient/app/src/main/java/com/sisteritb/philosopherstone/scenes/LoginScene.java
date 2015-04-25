@@ -22,7 +22,7 @@ import com.sisteritb.philosopherstone.connection.response.ResponseFailException;
 import com.sisteritb.philosopherstone.connection.response.SignupResponse;
 
 public class LoginScene extends Activity {
-    private static int CONNECTION_TIMEOUT = 5000;
+    private static int CONNECTION_TIMEOUT = 6000;
 
     private EditText usernameText, passwordText, portText, hostText;
     private PhilosopherStoneServer psServer;

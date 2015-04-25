@@ -445,7 +445,7 @@ class SisterServerLogic():
 
         username = self.getNameByToken(token)
         userOffer = self.getOfferByToken(offerToken)
-        print userOffer
+        # print userOffer
         if username != userOffer[5]:
             raise sisterexceptions.OfferException("it wasn't your offer")
 
@@ -610,7 +610,7 @@ class SisterServerLogic():
             return
 
         query = 'UPDATE users SET ' + query[:-2] + ' WHERE username = ?'
-        print 'updateQuery:', query
+        # print 'updateQuery:', query
         args.append(username)
 
         # insert into the database

@@ -281,7 +281,7 @@ class SisterServerLogic():
         inventory = mRecord.get('inventory')
         inventory[index] += 1
 
-        self.updateRecord(username, {'inventory': inventory, 'lastField': curY*width + curX})
+        self.updateRecord(username, {'inventory': inventory, 'lastField': curY * width + curX})
         return index
 
 

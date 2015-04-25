@@ -3,7 +3,6 @@ import socket
 import threading
 
 import sisterexceptions
-
 import helpers
 
 
@@ -148,8 +147,8 @@ class ServerDealer():
 
                 if inventory[offer[2]] < offer[3]:
                     # the number of item in inventory is not enough.
-                    raise sisterexceptions.OfferException("you don't have enough item %s"%
-                                                      self.mappingIndexItemToName(offer[2]))
+                    raise sisterexceptions.OfferException("you don't have enough item %s" %
+                                                          self.mappingIndexItemToName(offer[2]))
 
                 # send accept to other server
                 toSend = {}

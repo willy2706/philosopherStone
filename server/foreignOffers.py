@@ -120,6 +120,7 @@ class ServerDealer():
         '''
         self.foreignOffers = {}
         self.cacheTimeout = cacheTimeout
+        self.servers = []
 
     def setServers(self, servers):
         '''
@@ -151,26 +152,10 @@ class ServerDealer():
                                                           self.mappingIndexItemToName(offer[2]))
 
                 # send accept to other server
-                toSend = {}
-                toSend['method'] = 'accept'
-                toSend['offerToken'] = offerToken
-
-                # setup connection
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.settimeout(timeout)
-                s.connect(key[:2])
-
-                # send and receive
-                s.sendall(json.dumps(toSend))
-
-                everything = ''
-                while True:
-                    data = s.recv(4096)
-                    everything += data
-                    if helpers.containsValidJSON(everything):
-                        break
-
-                mJSON = json.loads(everything)
+                toSend = {'method': 'accept',
+                          'offerToken': offerToken}
+                
+                mJSON = helpers.sendJSON(key[:2], toSend, timeout)
 
                 status = mJSON['status']
 

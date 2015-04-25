@@ -1,5 +1,7 @@
 import calendar
+import json
 import time
+import socket
 
 
 def containsValidJSON(data):
@@ -95,3 +97,29 @@ def mappingNameItemToIndex(name):
         return 8
     elif name == 'R41':
         return 9
+
+def sendJSON(address, toSend, timeout=None):
+    """
+    Send JSON to other host and receive a reply.
+
+    :param: address (ip: string, port: int)
+    :param: toSend dictionary representing the JSON
+    :return: dictionary representing the JSON of the response
+    """
+
+    # setup connection
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(timeout)
+    s.connect(address)
+
+    # send and receive
+    s.sendall(json.dumps(toSend))
+
+    everything = ''
+    while True:
+        data = s.recv(4096)
+        everything += data
+        if containsValidJSON(everything):
+            break
+
+    return json.loads(everything)

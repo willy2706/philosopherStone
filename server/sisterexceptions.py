@@ -68,3 +68,15 @@ class ActionException(Exception):
 
     def __str__(self):
         return self.value
+
+
+class TrackerException(Exception):
+    """
+    The exception raised when Tracker send error.
+    """
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return self.value

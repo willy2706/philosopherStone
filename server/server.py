@@ -8,9 +8,6 @@ import helpers
 import sisterexceptions
 
 
-serverLogic = sister.SisterServerLogic()
-
-
 class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         """
@@ -120,9 +117,28 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
 
 
 if __name__ == '__main__':
-    port = 0
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 4:
+        # tracker mode
+        myIP = sys.argv[1]
+        port = int(sys.argv[2])
+        trackerAddress = (sys.argv[3], int(sys.argv[4]))
+        serverLogic = sister.SisterServerLogic((myIP, port), trackerAddress)
+
+    if len(sys.argv) == 2:
+        # local mode
         port = int(sys.argv[1])
+        serverLogic = sister.SisterServerLogic()
+
+    elif len(sys.argv) == 1:
+        # local mode with auto port
+        port = 0
+        serverLogic = sister.SisterServerLogic()
+
+    else:
+        print 'Usage: python %s <serverPort>'%sys.argv[0]
+        print '  -or- python %s'%sys.argv[0]
+        print '  -or- python %s <serverIP> <serverPort> <trackerIP> <trackerPort>'%sys.argv[0]
+        sys.exit()
 
     address = ('', port)
     server = SocketServer.ThreadingTCPServer(address, ThreadedSisterRequestHandler)

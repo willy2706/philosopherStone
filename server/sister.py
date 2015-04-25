@@ -19,27 +19,25 @@ class SisterServerLogic():
     """
     The Logic of Server.
     Instance objects:
-    -> loggedUser: map of token @ username
-    -> gameMap: {'name', 'width', 'height', 'map': matrix}
-   -> salt: string appended to be hashed
-    -> servers: list of map
-       -> ip: string
-       -> port: int
-    -> conn: sqlite3 database
-    -> actionTime: int, you can only move / fetch after this time
+    -> loggedUser: map of token:string @ username:string
+    -> gameMap: {'name':string, 'width':int, 'height':int, 'map': matrix}
+    -> salt: string appended to be hashed
     -> sendFindLock: Lock
+    -> foreignOffers: foreignOffers.ServerDealer
+    -> myAddress: (ip: string, port: int)
     """
 
-    def __init__(self):
+    def __init__(self, myAddress=None, trackerAddress=None):
         """
         Initialize the serverLogic.
+
         :return: None
         """
-        if not os.path.isfile(DATABASE_FILE):
-            # new database
-            # database akan otomatis dibikin kalau ga ada
-            conn = sqlite3.connect(DATABASE_FILE)
 
+        if not os.path.isfile(DATABASE_FILE):
+            # File not found, create a new database
+
+            conn = sqlite3.connect(DATABASE_FILE)
             c = conn.cursor()
             c.execute("CREATE TABLE IF NOT EXISTS users (username VARCHAR(255), password VARCHAR(255) NOT NULL, "
                       "R11 INT UNSIGNED NOT NULL DEFAULT 0, R12 INT UNSIGNED NOT NULL DEFAULT 0, R13 INT UNSIGNED NOT NULL DEFAULT 0, "
@@ -51,17 +49,28 @@ class SisterServerLogic():
                       "offered_item INT NOT NULL, num_offered_item INT NOT NULL, demanded_item INT NOT NULL, "
                       "num_demanded_item INT NOT NULL, availability TINYINT NOT NULL, PRIMARY KEY(offer_token), "
                       "FOREIGN KEY (username) REFERENCES users(username))")
+
             # buat save
             conn.commit()
             conn.close()
 
         self.loggedUser = {}
-        self.allOffers = {}
-        self.actionTime = {}
         self.loadMap('map.json')
         self.salt = 'mi0IUsW4'
         self.foreignOffers = foreignOffers.ServerDealer()
         self.sendFindLock = threading.Lock()
+        self.myAddress = myAddress
+
+        if trackerAddress:
+            # connect to tracker
+            request = {'method': 'join',
+                      'ip': myAddress[0],
+                      'port': myAddress[1]}
+            response = helpers.sendJSON(trackerAddress, request)
+            if response['status'] == 'ok':
+                self.serverStatus(response['value'])
+            else:
+                raise sisterexceptions.TrackerException('Tracker Failed')
 
 
     def serverStatus(self, servers):
@@ -340,7 +349,7 @@ class SisterServerLogic():
         username = self.getNameByToken(userToken)
 
         # get local server offers
-        res = [tuple(val[:-1]) + (key,) for offer in self.getAllOffers()
+        res = [offer[:5] for offer in self.getAllOffers()
                if offer[0] == item and offer[-1] != username]
 
         # get foreign servers offers
@@ -618,10 +627,8 @@ class SisterServerLogic():
         """
         Add an offer to the system.
         """
-        self.allOffers[offerToken] = [offeredItem, n1, demandedItem, n2, availability, username]
-
         res = self.getRecordByName(username)
-        numCurrOfferedItem = res['inventory'][offeredItem]
+        numCurrOfferedItem = res['inventory'].get(offeredItem)
         numOfferedItemNow = numCurrOfferedItem - n1
         name = helpers.mappingIndexItemToName(offeredItem)
 
@@ -673,7 +680,6 @@ class SisterServerLogic():
         c = conn.cursor()
         c.execute("DELETE FROM offers WHERE offer_token = ?", (offerToken,))
         conn.commit()
-        # self.allOffers.pop(offerToken)
 
 
     def getOffersByName(self, username):

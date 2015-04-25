@@ -107,6 +107,8 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             toSend['status'] = 'error'
             toSend['description'] = str(e)
 
+        serverLogic.closeConnection()
+
         # send response to client
         sToSend = json.dumps(toSend)
 

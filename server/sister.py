@@ -2,15 +2,18 @@ import hashlib
 import json
 import sqlite3
 import random
-import helpers
 import os
 import threading
 
+import helpers
 import foreignOffers
 import sisterexceptions
 
 
 DATABASE_FILE = 'sister.db'
+
+threadLocal = threading.local()
+
 
 class SisterServerLogic():
     """
@@ -35,9 +38,9 @@ class SisterServerLogic():
         if os.path.isfile(DATABASE_FILE):
             # new database
             # database akan otomatis dibikin kalau ga ada
-            self.conn = sqlite3.connect('sister.db', check_same_thread = False)
+            conn = sqlite3.connect(DATABASE_FILE)
 
-            c = self.conn.cursor()
+            c = conn.cursor()
             c.execute("CREATE TABLE IF NOT EXISTS users (username VARCHAR(255), password VARCHAR(255) NOT NULL, "
                       "R11 INT UNSIGNED NOT NULL DEFAULT 0, R12 INT UNSIGNED NOT NULL DEFAULT 0, R13 INT UNSIGNED NOT NULL DEFAULT 0, "
                       "R14 INT UNSIGNED NOT NULL DEFAULT 0, R21 INT UNSIGNED NOT NULL DEFAULT 0, R22 INT UNSIGNED NOT NULL DEFAULT 0, "
@@ -49,10 +52,8 @@ class SisterServerLogic():
                       "num_demanded_item INT NOT NULL, availability TINYINT NOT NULL, PRIMARY KEY(offer_token), "
                       "FOREIGN KEY (username) REFERENCES users(username))")
             # buat save
-            self.conn.commit()
-
-        else:
-            self.conn = sqlite3.connect('sister.db', check_same_thread=False)
+            conn.commit()
+            conn.close()
 
         self.loggedUser = {}
         self.allOffers = {}
@@ -101,7 +102,7 @@ class SisterServerLogic():
 
         if mRecord.get('password') != hashlib.md5(password).hexdigest():
             raise sisterexceptions.UsernameException('username/password combination is not found')
-        
+
         unixTime = mRecord.get('actionTime')
         token = hashlib.md5(name).hexdigest()
 
@@ -118,7 +119,7 @@ class SisterServerLogic():
 
         username = self.getNameByToken(userToken)
         record = self.getRecordByName(username)
-        
+
         return record['inventory']
 
     def mixItem(self, userToken, item1, item2):
@@ -243,7 +244,7 @@ class SisterServerLogic():
 
         # time in seconds
         eachStep = 1
-        timeNeeded = (abs(prevX-x) + abs(prevY-y)) * eachStep
+        timeNeeded = (abs(prevX - x) + abs(prevY - y)) * eachStep
 
         unixTime = currTime + timeNeeded
         self.actionTime = unixTime
@@ -273,7 +274,6 @@ class SisterServerLogic():
         mRecord['inventory'][index] += 1
 
         self.updateField(username, mRecord)
-
 
 
     """
@@ -312,11 +312,8 @@ class SisterServerLogic():
         lOfferToken += [chr(ord('A') + demandedItem), str(n2)]
         offerToken = hashlib.md5(''.join(lOfferToken)).hexdigest()
 
-        #jadi di dalam add offer, otomatis uda dikurangi demanded item nya
+        # jadi di dalam add offer, otomatis uda dikurangi demanded item nya
         self.addOffer(username, offerToken, offeredItem, n1, demandedItem, n2, True)
-        # userOffers[offerToken] = [offeredItem, n1, demandedItem, n2, True]
-        # allOffers[offerToken] = username
-
 
 
     def sendFind(self, userToken, item):
@@ -408,30 +405,31 @@ class SisterServerLogic():
             raise sisterexceptions.OfferException('the offer has been taken')
         else:
             self.setOfferNotAvailable(offerToken)
-        
-        # offer[4] = False
-        # self.updateOfferToken(offerToken, offer)
+
+            # offer[4] = False
+            # self.updateOfferToken(offerToken, offer)
 
     def fetchItem(self, token, offerToken):
         """
         Fetch the item from our accepted offer.
         Our offer must be on local server.
         """
-        
+
         username = self.getNameByToken(token)
         userOffer = self.getOfferByToken(offerToken)
         print userOffer
         if username != userOffer[5]:
             raise sisterexceptions.OfferException("it wasn't your offer")
-        
+
         if userOffer[4]:
             raise sisterexceptions.OfferException("you cannot fetch item that hasn't been accepted")
-        
+
         # add to inventory
         record = self.getRecordByName(username)
-        self.changeInventoryItem(username, userOffer[2], record['inventory'][userOffer[2]] + userOffer[3])
-        # record['inventory'][userOffer[2]] += userOffer[3]
-        
+        inventory = record.get('inventory')
+        inventory[userOffer[2]] += userOffer[3]
+        self.updateRecord(username, {'inventory': inventory})
+
         # delete the offer to prevent user taking the offer item multiple times
         self.deleteOfferByToken(offerToken)
 
@@ -452,9 +450,10 @@ class SisterServerLogic():
 
         # remove offer
         record = self.getRecordByName(username)
-        self.changeInventoryItem(username, offer[0], record['inventory'][offer[0]] + offer[1])
+        inventory = record.get('inventory')
+        inventory[offer[0]] += offer[1]
+        self.updateRecord(username, {'inventory': inventory})
         self.deleteOfferByToken(offerToken)
-
 
 
     def validateIndexItem(self, index):
@@ -488,7 +487,8 @@ class SisterServerLogic():
         :return: boolean
         """
 
-        c = self.conn.cursor()
+        conn = self.getConnection()
+        c = conn.cursor()
         res = c.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
         return res != None
 
@@ -504,9 +504,10 @@ class SisterServerLogic():
         record = {'password': hashlib.md5(password).hexdigest()}
 
         # save to database
-        c = self.conn.cursor()
+        conn = self.getConnection()
+        c = conn.cursor()
         c.execute("INSERT INTO users(username, password) VALUES (?, ?)", (username, hashlib.md5(password).hexdigest()))
-        self.conn.commit()
+        conn.commit()
 
     def getRecordByName(self, username):
         """
@@ -517,7 +518,8 @@ class SisterServerLogic():
         :exception: UsernameException
         """
 
-        c = self.conn.cursor()
+        conn = self.getConnection()
+        c = conn.cursor()
         res = c.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
 
         if res == None:
@@ -566,7 +568,7 @@ class SisterServerLogic():
             elif key == 'inventory':
                 idx = 0
                 for item in val:
-                    query += '%s = ?, '%helpers.mappingIndexItemToName(idx)
+                    query += '%s = ?, ' % helpers.mappingIndexItemToName(idx)
                     args.append(item)
                     idx += 1
 
@@ -576,11 +578,13 @@ class SisterServerLogic():
 
         query = query[:-1]
         query += 'WHERE username = ?'
+        args.append(username)
 
         # insert into the database
-        c = self.conn.cursor()
+        conn = self.getConnection()
+        c = conn.cursor()
         c.execute(query, tuple(args))
-        c.commit()
+        conn.commit()
 
 
     def getNameByToken(self, token):
@@ -600,39 +604,35 @@ class SisterServerLogic():
         Add an offer to the system.
         """
         self.allOffers[offerToken] = [offeredItem, n1, demandedItem, n2, availability, username]
-        c = self.conn.cursor()
 
         res = self.getRecordByName(username)
         numCurrOfferedItem = res['inventory'][offeredItem]
         numOfferedItemNow = numCurrOfferedItem - n1
         name = helpers.mappingIndexItemToName(offeredItem)
-        
-        # c.execute("UPDATE users SET ? = ? WHERE username = ?", (name, numOfferedItemNow, username)) #ga jalan
-        #jangan diubah kode dibawah #willy
-        c.execute("UPDATE users SET "+name+" = ? WHERE username = ?", (numOfferedItemNow, username))
-        c.execute("INSERT INTO offers (offer_token, username, offered_item, num_offered_item, demanded_item, num_demanded_item, availability) VALUES (?,?,?,?,?,?,?)", (offerToken, username, offeredItem, n1, demandedItem, n2, availability))
-        self.conn.commit()
+
+        conn = self.getConnection()
+        c = conn.cursor()
+        c.execute("UPDATE users SET " + name + " = ? WHERE username = ?", (numOfferedItemNow, username))
+        c.execute(
+            "INSERT INTO offers (offer_token, username, offered_item, num_offered_item, demanded_item, num_demanded_item, availability) VALUES (?,?,?,?,?,?,?)",
+            (offerToken, username, offeredItem, n1, demandedItem, n2, availability))
+        conn.commit()
 
     def getOfferByToken(self, offerToken):
         """
         Get local offer by offerToken.
+
         :param offerToken: string
         :return: (offeredItem, n1, demandedItem, n2, availability, offerToken)
         """
-        c = self.conn.cursor()
+        conn = self.getConnection()
+        c = conn.cursor()
         res = c.execute("SELECT * FROM offers WHERE offer_token = ?", (offerToken,)).fetchone()
 
         if res == None:
             raise sisterexceptions.OfferException('offer not found in database. token mismatch?')
 
-        return [res[2], res[3], res[4], res[5], res[6], res[1]]
-        # return record
-        # res = self.allOffers.get(offerToken)
-        # if res:
-        #     return res
-        # else:
-        #     raise sisterexceptions.TokenException('invalid offerToken')
-
+        return (res[2], res[3], res[4], res[5], res[6], res[1])
 
     def setOfferNotAvailable(self, offerToken):
         """
@@ -642,9 +642,10 @@ class SisterServerLogic():
         :return: None
         """
 
-        c = self.conn.cursor()
+        conn = self.getConnection()
+        c = conn.cursor()
         c.execute("UPDATE offers SET availability = '0' WHERE offer_token = ?", (offerToken,))
-        self.conn.commit()
+        conn.commit()
 
     def deleteOfferByToken(self, offerToken):
         """
@@ -653,9 +654,10 @@ class SisterServerLogic():
         :return:
         """
 
-        c = self.conn.cursor()
+        conn = self.getConnection()
+        c = conn.cursor()
         c.execute("DELETE FROM offers WHERE offer_token = ?", (offerToken,))
-        self.conn.commit()
+        conn.commit()
         # self.allOffers.pop(offerToken)
 
 
@@ -664,35 +666,48 @@ class SisterServerLogic():
         Get local offers for a username.
         :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
         """
-        c = self.conn.cursor()
-        res = c.execute("SELECT * FROM offers WHERE username = ?", (username,))
-        
-        return tuple([row[2], row[3], row[4], row[5], True if row[6] == 1 else False, row[0]] for row in res)
-        # return [row[2], row[3], row[4], row[5], True if row[6] == 1 else False, row[0]]
-        
-        # return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items() if val[-1] == username)
 
+        conn = self.getConnection()
+        c = conn.cursor()
+        res = c.execute("SELECT * FROM offers WHERE username = ?", (username,))
+
+        return tuple((row[2], row[3], row[4], row[5], row[6] == 1, row[0]) for row in res)
 
     def getAllOffers(self):
         """
         Get all local offers.
         :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
         """
-        c = self.conn.cursor()
+
+        conn = self.getConnection()
+        c = conn.cursor()
         res = c.execute("SELECT * FROM offers")
-        
-        return tuple([row[2], row[3], row[4], row[5], True if row[6] == 1 else False, row[0]] for row in res)
-        # return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items())
 
-    def changeInventoryItem(self, username, index, number):
+        return tuple((row[2], row[3], row[4], row[5], row[6] == 1, row[0]) for row in res)
+
+    def getConnection(self):
         """
-        Change the number of item in database
-        :param index: unsigned integer
-        :param number: unsigned integer
-        :return:
+        Return a local sqlite3 connection.
+
+        :return: sqlite3 connection
         """
 
-        c = self.conn.cursor()
-        name = helpers.mappingIndexItemToName(index)
-        c.execute("UPDATE users SET "+name+" = ? WHERE username = ?", (number, username))
-        self.conn.commit()
+        conn = getattr(threadLocal, 'conn', None)
+        if conn is None:
+            conn = sqlite3.connect(DATABASE_FILE)
+            threadLocal.conn = conn
+
+        return conn
+
+    def closeConnection(self):
+        """
+        Close the sqlite3 connection.
+
+        :return: None
+        """
+
+        conn = getattr(threadLocal, 'conn', None)
+        if conn:
+            conn.close()
+
+        print "Local thread", threadLocal

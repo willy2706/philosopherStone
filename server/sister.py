@@ -4,17 +4,12 @@ import sqlite3
 import random
 import helpers
 import os
-<<<<<<< HEAD
-import helpers
-=======
->>>>>>> parent of 969db33... harusnya sudah bisa testing secara local, ayo testing :3
 
 import foreignOffers
 import sisterexceptions
 
 
 DATABASE_FILE = 'sister.db'
-
 
 class SisterServerLogic():
     """
@@ -129,8 +124,9 @@ class SisterServerLogic():
         """
 
         username = self.getNameByToken(userToken)
-
-        return self.getRecordByName(username).get('inventory')
+        record = self.getRecordByName(username)
+        
+        return record['inventory']
 
     def mixItem(self, userToken, item1, item2):
         """
@@ -323,6 +319,7 @@ class SisterServerLogic():
         lOfferToken += [chr(ord('A') + demandedItem), str(n2)]
         offerToken = hashlib.md5(''.join(lOfferToken)).hexdigest()
 
+        #jadi di dalam add offer, otomatis uda dikurangi demanded item nya
         self.addOffer(username, offerToken, offeredItem, n1, demandedItem, n2, True)
         # userOffers[offerToken] = [offeredItem, n1, demandedItem, n2, True]
         # allOffers[offerToken] = username
@@ -360,8 +357,7 @@ class SisterServerLogic():
         self.validateIndexItem(item)
 
         # ASSUME only return available offers
-        return tuple(tuple(val[:-1]) + (key,) for key, val
-                     in self.getOffersByName() if val[0] == item and val[4])
+        return tuple(row for row in self.getAllOffers() if row[0] == item and row[4])
 
     def sendAccept(self, userToken, offerToken):
         """
@@ -407,29 +403,37 @@ class SisterServerLogic():
         """
 
         offer = self.getOfferByToken(offerToken)
-        offer[4] = False
-        self.updateOfferToken(offerToken, offer)
 
-    def fetchItem(self, token, offer_token):
+        if not offer[4]:
+            raise sisterexceptions.OfferException('the offer has been taken')
+        else:
+            self.setOfferNotAvailable(offerToken)
+        
+        # offer[4] = False
+        # self.updateOfferToken(offerToken, offer)
+
+    def fetchItem(self, token, offerToken):
         """
         Fetch the item from our accepted offer.
         Our offer must be on local server.
         """
+        
         username = self.getNameByToken(token)
-        userOffer = self.getOfferByToken(offer_token)
-
-        if username != userOffer[-1]:
+        userOffer = self.getOfferByToken(offerToken)
+        print userOffer
+        if username != userOffer[5]:
             raise sisterexceptions.OfferException("it wasn't your offer")
-
+        
         if userOffer[4]:
             raise sisterexceptions.OfferException("you cannot fetch item that hasn't been accepted")
-
+        
         # add to inventory
         record = self.getRecordByName(username)
-        record['inventory'][userOffer[2]] += userOffer[3]
-
+        self.changeInventoryItem(username, userOffer[2], record['inventory'][userOffer[2]] + userOffer[3])
+        # record['inventory'][userOffer[2]] += userOffer[3]
+        
         # delete the offer to prevent user taking the offer item multiple times
-        self.deleteOfferByToken(offer_token)
+        self.deleteOfferByToken(offerToken)
 
     def cancelOffer(self, token, offerToken):
         """
@@ -440,13 +444,15 @@ class SisterServerLogic():
         username = self.getNameByToken(token)
         offer = self.getOfferByToken(offerToken)
 
-        if username != offer[-1]:
+        if username != offer[5]:
             raise sisterexceptions.OfferException("you can't cancel an offer that isn't yours")
 
         if not offer[4]:
             raise sisterexceptions.OfferException("you can't cancel an offer that is no longer available")
 
         # remove offer
+        record = self.getRecordByName(username)
+        self.changeInventoryItem(username, offer[0], record['inventory'][offer[0]] + offer[1])
         self.deleteOfferByToken(offerToken)
 
     def mappingIndexItemToName(self, index):
@@ -568,7 +574,7 @@ class SisterServerLogic():
         res = c.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
 
         if res == None:
-            return sisterexceptions.UsernameException('username not found in database')
+            raise sisterexceptions.UsernameException('username not found in database')
 
         record = {}
         record['x'] = res[12]
@@ -598,7 +604,6 @@ class SisterServerLogic():
         # c.execute("UPDATE users SET " + mappingIndexItemToName[item1] + " = " + numItem1 + ", " + mappingIndexItemToName[item2] + " = " + numItem2 + ", " + mappingIndexItemToName[itemRes] + " = " + numItemRes + " WHERE username = " + username)
         # conn.commit()
         #self.synchronizeInventories()
-
 
 
     def getNameByToken(self, token):
@@ -637,11 +642,19 @@ class SisterServerLogic():
         :param offerToken: string
         :return: (offeredItem, n1, demandedItem, n2, availability, offerToken)
         """
-        res = self.allOffers.get(offerToken)
-        if res:
-            return res
-        else:
-            raise sisterexceptions.TokenException('invalid offerToken')
+        c = self.conn.cursor()
+        res = c.execute("SELECT * FROM offers WHERE offer_token = ?", (offerToken,)).fetchone()
+
+        if res == None:
+            raise sisterexceptions.OfferException('offer not found in database. token mismatch?')
+
+        return [res[2], res[3], res[4], res[5], res[6], res[1]]
+        # return record
+        # res = self.allOffers.get(offerToken)
+        # if res:
+        #     return res
+        # else:
+        #     raise sisterexceptions.TokenException('invalid offerToken')
 
 
     def updateOfferToken(self, offerToken, updates):
@@ -654,13 +667,27 @@ class SisterServerLogic():
 
         self.allOffers[offerToken].update(updates)
 
+    def setOfferNotAvailable(self, offerToken):
+        """
+        set the availability to false.
+        :param offerToken: string
+        :return: None
+        """
+        c = self.conn.cursor()
+        c.execute("UPDATE offers SET availability = '0' WHERE offer_token = ?", (offerToken,))
+        self.conn.commit()
+
     def deleteOfferByToken(self, offerToken):
         """
         Delete the offer with offerToken from local server.
         :param offerToken: string
         :return:
         """
-        self.allOffers.pop(offerToken)
+
+        c = self.conn.cursor()
+        c.execute("DELETE FROM offers WHERE offer_token = ?", (offerToken,))
+        self.conn.commit()
+        # self.allOffers.pop(offerToken)
 
 
     def getOffersByName(self, username):
@@ -682,5 +709,21 @@ class SisterServerLogic():
         Get all local offers.
         :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
         """
-        return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items())
+        c = self.conn.cursor()
+        res = c.execute("SELECT * FROM offers")
+        
+        return tuple([row[2], row[3], row[4], row[5], True if row[6] == 1 else False, row[0]] for row in res)
+        # return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items())
 
+    def changeInventoryItem(self, username, index, number):
+        """
+        Change the number of item in database
+        :param index: unsigned integer
+        :param number: unsigned integer
+        :return:
+        """
+
+        c = self.conn.cursor()
+        name = self.mappingIndexItemToName(index)
+        c.execute("UPDATE users SET "+name+" = ? WHERE username = ?", (number, username))
+        self.conn.commit()

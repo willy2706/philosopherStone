@@ -122,7 +122,7 @@ public class LoginScene extends Activity {
                 GameState.loginToken = response.getToken();
                 GameState.location_x = response.getX();
                 GameState.location_y = response.getY();
-                GameState.arrivedTime = response.getTime();
+                GameState.arrivedTime = response.getTime()*1000;
                 Intent intent = new Intent(context, MapScene.class);
                 startActivity(intent);
             } else if (failException != null) {

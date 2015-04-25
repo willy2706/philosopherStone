@@ -20,11 +20,16 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         # receive JSON from other machine (tracker/client)
         everything = ''
 
-        while True:
-            data = self.request.recv(4096)
-            everything += data
-            if helpers.containsValidJSON(everything):
-                break
+        try:
+            while True:
+                data = self.request.recv(4096)
+                everything += data
+                if helpers.containsValidJSON(everything):
+                    break
+
+        except Exception as e:
+            print 'ada exception yang dilempar'
+            raise e
 
         # debug
         print 'Request:'

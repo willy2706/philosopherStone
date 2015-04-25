@@ -597,6 +597,7 @@ class SisterServerLogic():
         #self.synchronizeInventories()
 
 
+
     def getNameByToken(self, token):
         """
         Get the username of a userToken.

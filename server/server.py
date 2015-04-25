@@ -98,7 +98,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             toSend['status'] = 'ok'
 
         except (sisterexceptions.OfferException, sisterexceptions.IndexItemException, sisterexceptions.MixtureException,
-                sisterexceptions.TokenException, sisterexceptions.UsernameException) as e:
+                sisterexceptions.TokenException, sisterexceptions.UsernameException, sisterexceptions.ActionException) as e:
             # any custom exceptions is a failure
             toSend['status'] = 'fail'
             toSend['description'] = str(e)
@@ -106,6 +106,8 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         except Exception as e:
             toSend['status'] = 'error'
             toSend['description'] = str(e)
+
+        serverLogic.closeConnection()
 
         # send response to client
         sToSend = json.dumps(toSend)

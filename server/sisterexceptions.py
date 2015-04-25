@@ -58,9 +58,9 @@ class IndexItemException(Exception):
         return self.value
 
 
-class MoveException(Exception):
+class ActionException(Exception):
     """
-    The exception raised when user try to move to invalid location.
+    The exception raised when user try to make an illegal action.
     """
 
     def __init__(self, value):

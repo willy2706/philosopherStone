@@ -19,7 +19,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/LoginTitleTextView"
-        android:padding="42dp">
+        android:padding="15dp">
 
         <TextView
             android:layout_width="wrap_content"

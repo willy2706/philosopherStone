@@ -35,7 +35,7 @@
                 android:id="@+id/item0TextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
+                android:layout_marginBottom="10dp"
                 android:background="#fffff967"
                 android:gravity="center"
                 android:text="0"
@@ -53,7 +53,7 @@
                 android:id="@+id/item1TextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
+                android:layout_marginBottom="10dp"
                 android:background="#fffff967"
                 android:gravity="center"
                 android:text="0"
@@ -71,11 +71,23 @@
                 android:id="@+id/item2TextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
+                android:layout_marginBottom="10dp"
                 android:background="#fffff967"
                 android:gravity="center"
                 android:text="0"
                 android:textColor="#000000" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:padding="@dimen/abc_control_padding_material">
 
             <ImageView
                 android:id="@+id/item3Image"
@@ -89,21 +101,11 @@
                 android:id="@+id/item3TextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
+                android:layout_marginBottom="10dp"
                 android:background="#fffff967"
                 android:gravity="center"
                 android:text="0"
                 android:textColor="#000000" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:orientation="vertical"
-            android:padding="@dimen/abc_control_padding_material">
 
             <ImageView
                 android:id="@+id/item4Image"
@@ -141,6 +143,19 @@
                 android:text="0"
                 android:textColor="#000000" />
 
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:padding="@dimen/abc_control_padding_material">
+
             <ImageView
                 android:id="@+id/item6Image"
                 android:layout_width="match_parent"
@@ -158,17 +173,6 @@
                 android:gravity="center"
                 android:text="0"
                 android:textColor="#000000" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:orientation="vertical"
-            android:padding="@dimen/abc_control_padding_material">
 
             <ImageView
                 android:id="@+id/item7Image"

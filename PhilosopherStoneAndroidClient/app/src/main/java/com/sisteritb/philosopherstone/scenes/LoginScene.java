@@ -123,6 +123,8 @@ public class LoginScene extends Activity {
                 GameState.location_x = response.getX();
                 GameState.location_y = response.getY();
                 GameState.arrivedTime = response.getTime()*1000;
+                GameState.syncTime = response.getSyncTime()*1000-System.currentTimeMillis();
+                Log.d("connection", "Sync current time: "+System.currentTimeMillis()+" Server: "+response.getSyncTime()*1000);
                 Intent intent = new Intent(context, MapScene.class);
                 startActivity(intent);
             } else if (failException != null) {

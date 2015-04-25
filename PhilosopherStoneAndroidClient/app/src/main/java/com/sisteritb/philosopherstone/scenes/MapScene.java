@@ -2,6 +2,7 @@ package com.sisteritb.philosopherstone.scenes;
 
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.CountDownTimer;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,6 +32,8 @@ public class MapScene extends ActionBarActivity {
     PhilosopherStoneServer psServer;
     EditText rowEditText, columnEditText;
     TextView mapNameText, arrivedTimeText, maxSizeText;
+    CountDownTimer timer;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +50,7 @@ public class MapScene extends ActionBarActivity {
 
         initPlayerInfo();
         initMapInfo();
+        initTimer();
     }
 
 
@@ -82,6 +86,10 @@ public class MapScene extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public void initTimer(){
+
+    }
+
     public void movePlayer(View view) {
         MoveRequest request = new MoveRequest();
         request.token = GameState.loginToken;
@@ -113,7 +121,31 @@ public class MapScene extends ActionBarActivity {
     private void initPlayerInfo(){
         rowEditText.setText(""+GameState.location_y);
         columnEditText.setText(""+GameState.location_x);
-        arrivedTimeText.setText("Arrived Time: "+GameState.arrivedTime);
+        Log.d("ui", "Current time millis:" + System.currentTimeMillis()+" Arrived:"+GameState.arrivedTime);
+        if(GameState.arrivedTime > System.currentTimeMillis()){
+            setTimer(System.currentTimeMillis(),GameState.arrivedTime);
+        } else {
+            arrivedTimeText.setText("You are at row:" + GameState.location_y+" col:"+GameState.location_x);
+        }
+    }
+
+    private void setTimer(long now, long arrived){
+        if(timer != null){
+            timer.cancel();
+        }
+        timer = new CountDownTimer(arrived - now,1000){
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                long second = millisUntilFinished/1000;
+                arrivedTimeText.setText("Walking, arrived in "+second/60+" minutes and "+second%60+" seconds.");
+            }
+
+            @Override
+            public void onFinish() {
+                arrivedTimeText.setText("You are at row:" + GameState.location_y+" col:"+GameState.location_x);
+            }
+        }.start();
     }
 
     private void initMapInfo(){
@@ -167,12 +199,15 @@ public class MapScene extends ActionBarActivity {
     private class MoveTask extends AsyncTask<MoveRequest, Void, MoveResponse> {
 
         private ResponseFailException failException = null;
+        private long x, y;
 
         @Override
         protected MoveResponse doInBackground(MoveRequest... requests) {
             MoveResponse response = null;
             try {
                 response = psServer.send(requests[0]);
+                x = requests[0].x;
+                y = requests[0].y;
                 Log.d("connection", "Move response created.");
             } catch (ResponseFailException e) {
                 failException = e;
@@ -188,6 +223,12 @@ public class MapScene extends ActionBarActivity {
         protected void onPostExecute(MoveResponse response){
 
             if (response != null) {
+                GameState.arrivedTime = response.getTime()*1000;
+                if(GameState.arrivedTime > System.currentTimeMillis()){
+                    setTimer(System.currentTimeMillis(),GameState.arrivedTime);
+                } else {
+                    arrivedTimeText.setText("You are at row:" + GameState.location_y+" col:"+GameState.location_x);
+                }
                 Toast.makeText(getApplicationContext(), "Move success.", Toast.LENGTH_LONG).show();
             } else if (failException != null) {
                 Toast.makeText(getApplicationContext(), failException.getMessage(), Toast.LENGTH_LONG).show();

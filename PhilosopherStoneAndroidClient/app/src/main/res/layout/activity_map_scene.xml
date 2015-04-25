@@ -39,13 +39,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Time Now: "
-            android:id="@+id/timeNowText"/>
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Arrived Time: "
+            android:text="You are at (_,_)"
             android:id="@+id/arrivedTimeText"/>
     </LinearLayout>
 

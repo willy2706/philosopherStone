@@ -4,7 +4,10 @@ import sqlite3
 import random
 import helpers
 import os
+<<<<<<< HEAD
 import helpers
+=======
+>>>>>>> parent of 969db33... harusnya sudah bisa testing secara local, ayo testing :3
 
 import foreignOffers
 import sisterexceptions
@@ -651,7 +654,6 @@ class SisterServerLogic():
 
         self.allOffers[offerToken].update(updates)
 
-
     def deleteOfferByToken(self, offerToken):
         """
         Delete the offer with offerToken from local server.
@@ -681,3 +683,4 @@ class SisterServerLogic():
         :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
         """
         return tuple(tuple(val[:-1]) + (key,) for key, val in self.allOffers.items())
+

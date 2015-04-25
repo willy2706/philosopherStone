@@ -7,8 +7,8 @@ import sister
 import helpers
 import sisterexceptions
 
-class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
 
+class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         """
         Main handle method.
@@ -25,7 +25,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 break
 
         # debug
-        print 'Request:'
+        print 'Request from %s:%d :' % self.request.getpeername()
         print everything
         mJSON = json.loads(everything)
 
@@ -61,7 +61,6 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['height'] = height
 
             elif method == 'move':
-                # TODO: waktu disini waktu apa? langsung gerak atau gmna? x, y nya gmna koordinat layar?
                 actionTime = serverLogic.move(mJSON['token'], mJSON['x'], mJSON['y'])
                 toSend['time'] = actionTime
 
@@ -104,7 +103,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             toSend['description'] = str(e)
 
         # except Exception as e:
-        #     toSend['status'] = 'error'
+        # toSend['status'] = 'error'
         #     toSend['description'] = str(e)
 
         serverLogic.closeConnection()
@@ -113,7 +112,8 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         sToSend = json.dumps(toSend)
 
         # debug mode
-        print 'Response:', sToSend
+        print 'Response to %s:%d :' % self.request.getpeername()
+        print sToSend
         self.request.sendall(sToSend)
 
 
@@ -125,7 +125,7 @@ if __name__ == '__main__':
         trackerAddress = (sys.argv[3], int(sys.argv[4]))
         serverLogic = sister.SisterServerLogic((myIP, port), trackerAddress)
 
-    if len(sys.argv) == 2:
+    elif len(sys.argv) == 2:
         # local mode
         port = int(sys.argv[1])
         serverLogic = sister.SisterServerLogic()
@@ -136,9 +136,9 @@ if __name__ == '__main__':
         serverLogic = sister.SisterServerLogic()
 
     else:
-        print 'Usage: python %s <serverPort>'%sys.argv[0]
-        print '  -or- python %s'%sys.argv[0]
-        print '  -or- python %s <serverIP> <serverPort> <trackerIP> <trackerPort>'%sys.argv[0]
+        print 'Usage: python %s <serverPort>' % sys.argv[0]
+        print '  -or- python %s' % sys.argv[0]
+        print '  -or- python %s <serverIP> <serverPort> <trackerIP> <trackerPort>' % sys.argv[0]
         sys.exit()
 
     address = ('', port)

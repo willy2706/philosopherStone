@@ -1,5 +1,3 @@
-import json
-import socket
 import threading
 
 import sisterexceptions
@@ -25,6 +23,7 @@ class OffersFinder():
         @timout float: timeout in seconds
         '''
         self.offers = {}
+        self.deadServers = []
         self.addresses = addresses
         self.item = item
         self.timeout = timeout
@@ -43,11 +42,12 @@ class OffersFinder():
             t = threading.Thread(target=self.sendFindOfferWithExceptionHandling,
                                  args=(address, self.item, self.timeout))
             running.append(t)
+            t.start()
 
         for t in running:
             t.join()
 
-        return self.offers
+        return self.offers, self.deadServers
 
     def sendFindOfferWithExceptionHandling(self, address, item, timeout):
         '''
@@ -57,7 +57,9 @@ class OffersFinder():
             self.sendFindOffer(address, item, timeout)
 
         except Exception as e:
-            print e
+            self.deadServers.append(address)
+            print 'Address %s:%d is dead' % address
+            print 'Cause:', e
 
     def sendFindOffer(self, address, item, timeout):
         '''
@@ -69,35 +71,19 @@ class OffersFinder():
         '''
 
         # structure data
-        toSend = {}
-        toSend['method'] = 'findoffer'
-        toSend['item'] = item
+        toSend = {'method': 'findoffer',
+                  'item': item}
 
         # setup connection
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(timeout)
-        s.connect(address)
-
-        # send and receive
-        s.sendall(json.dumps(toSend))
-
-        everything = ''
-        while True:
-            data = s.recv(4096)
-            everything += data
-            if helpers.containsValidJSON(everything):
-                break
-
-        mJSON = json.loads(everything)
+        mJSON = helpers.sendJSON(address, toSend, timeout)
 
         offers = mJSON['offers']
 
-        # convert back to our offer representation
-        self.offers[(address) + (item,)] = {}
-        ref = self.offers[(address) + (item,)]
+        # convert back to our offer representation and update ofers
+        ref = self.offers[(address) + (item,)] = {}
+
         ref['lastUpdate'] = helpers.getCurrentTime()
-        ref['offers'] = {}
-        ref0 = ref['offers']
+        ref0 = ref['offers'] = {}
         for offer in offers:
             ref0[offer[-1]] = offer[:-1]
 
@@ -113,14 +99,16 @@ class ServerDealer():
         -> port: int
     '''
 
-    def __init__(self, cacheTimeout=30):
+    def __init__(self, myAddress, cacheTimeout=30):
         '''
         Initiate attributes.
         :param cacheTimeout: int, number of seconds until the local cache times out
         '''
         self.foreignOffers = {}
-        self.cacheTimeout = cacheTimeout
         self.servers = []
+        self.myAddress = myAddress
+        self.cacheTimeout = cacheTimeout
+
 
     def setServers(self, servers):
         '''
@@ -155,17 +143,22 @@ class ServerDealer():
                 toSend = {'method': 'accept',
                           'offerToken': offerToken}
 
-                mJSON = helpers.sendJSON(key[:2], toSend, timeout)
+                try:
+                    mJSON = helpers.sendJSON(key[:2], toSend, timeout)
+
+                except:
+                    # server is dead
+                    self.removeServer(key[:2])
+                    raise sisterexceptions.OfferException('offer server is dead')
 
                 status = mJSON['status']
 
+                res = offers.pop(offerToken)
+
                 if status == 'fail':
-                    offers.pop(offerToken)
                     raise sisterexceptions.OfferException('offer no longer available')
-                elif status == 'ok':
-                    res = offers.pop(offerToken)
-                else:
-                    raise Exception(mJSON['description'])
+                elif status == 'error':
+                    raise sisterexceptions.OfferException(mJSON['description'])
 
                 found = True
                 break
@@ -179,7 +172,7 @@ class ServerDealer():
     def findOffers(self, item):
         """
         Find Offers from foreign servers.
-        :return: list of [offerid, n1, demandid, n2, availability, offerToken]
+        :return: list of (offerid, n1, demandid, n2, availability, offerToken)
         """
 
         # list of servers need to be searched for offers
@@ -189,6 +182,9 @@ class ServerDealer():
         res = []
 
         for address in self.servers:
+            if address == self.myAddress:
+                continue
+
             addressItem = (address.get('ip'), address.get('port'), item)
             record = self.foreignOffers.get(addressItem)
             hit = False
@@ -199,7 +195,7 @@ class ServerDealer():
 
                 if unixTime < record.get('lastUpdate') + self.cacheTimeout:
                     # hit!
-                    res += [tuple(val) + (key,) for key, val in record.get('offers')]
+                    res += [tuple(val) + (key,) for key, val in record.get('offers').items()]
                     hit = True
 
             if not hit:
@@ -209,10 +205,31 @@ class ServerDealer():
                 toSend.append(addressItem[:2])
 
         oFinder = OffersFinder(toSend, item, 3)
-        uncached = oFinder.find()
+        uncached, deadServers = oFinder.find()
         self.foreignOffers.update(uncached)
+        for server in deadServers:
+            self.removeServer(server)
 
-        for uncachedRecord in uncached:
-            res += [tuple(val) + (key,) for key, val in uncachedRecord.get('offers')]
+        for key1, val1 in uncached.items():
+            res += [tuple(val0) + (key0,) for key0, val0 in val1.get('offers').items()]
 
         return res
+
+    def removeServer(self, address):
+        """
+        Remove a server from the cache, all the offers are removed too.
+
+        :param address: (ip, port)
+        :return: None
+        """
+        # remove server
+        self.servers.remove({'ip': address[0], 'port': address[1]})
+
+        # remove all offer with that server
+        toPop = []
+        for key, val in self.foreignOffers.items():
+            if key[:2] == address:
+                toPop.append(key)
+
+        for key in toPop:
+            self.foreignOffers.pop(key)

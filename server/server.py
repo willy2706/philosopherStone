@@ -8,9 +8,6 @@ import helpers
 import sisterexceptions
 
 
-serverLogic = sister.SisterServerLogic()
-
-
 class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         """
@@ -21,13 +18,14 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         everything = ''
 
         while True:
+            self.request.settimeout(3)
             data = self.request.recv(4096)
             everything += data
             if helpers.containsValidJSON(everything):
                 break
 
         # debug
-        print 'Request:'
+        print 'Request from %s:%d :' % self.request.getpeername()
         print everything
         mJSON = json.loads(everything)
 
@@ -63,7 +61,6 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 toSend['height'] = height
 
             elif method == 'move':
-                # TODO: waktu disini waktu apa? langsung gerak atau gmna? x, y nya gmna koordinat layar?
                 actionTime = serverLogic.move(mJSON['token'], mJSON['x'], mJSON['y'])
                 toSend['time'] = actionTime
 
@@ -106,7 +103,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             toSend['description'] = str(e)
 
         # except Exception as e:
-        #     toSend['status'] = 'error'
+        # toSend['status'] = 'error'
         #     toSend['description'] = str(e)
 
         serverLogic.closeConnection()
@@ -115,14 +112,34 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         sToSend = json.dumps(toSend)
 
         # debug mode
-        print 'Response:', sToSend
+        print 'Response to %s:%d :' % self.request.getpeername()
+        print sToSend
         self.request.sendall(sToSend)
 
 
 if __name__ == '__main__':
-    port = 0
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 4:
+        # tracker mode
+        myIP = sys.argv[1]
+        port = int(sys.argv[2])
+        trackerAddress = (sys.argv[3], int(sys.argv[4]))
+        serverLogic = sister.SisterServerLogic((myIP, port), trackerAddress)
+
+    elif len(sys.argv) == 2:
+        # local mode
         port = int(sys.argv[1])
+        serverLogic = sister.SisterServerLogic()
+
+    elif len(sys.argv) == 1:
+        # local mode with auto port
+        port = 0
+        serverLogic = sister.SisterServerLogic()
+
+    else:
+        print 'Usage: python %s <serverPort>' % sys.argv[0]
+        print '  -or- python %s' % sys.argv[0]
+        print '  -or- python %s <serverIP> <serverPort> <trackerIP> <trackerPort>' % sys.argv[0]
+        sys.exit()
 
     address = ('', port)
     server = SocketServer.ThreadingTCPServer(address, ThreadedSisterRequestHandler)

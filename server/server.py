@@ -1,4 +1,5 @@
 import SocketServer
+import traceback
 import sys
 import threading
 import json
@@ -17,16 +18,16 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         # receive JSON from other machine (tracker/client)
         everything = ''
 
+        self.request.settimeout(3)
         while True:
-            self.request.settimeout(3)
             data = self.request.recv(4096)
             everything += data
             if helpers.containsValidJSON(everything):
                 break
 
         # debug
-        # print 'Request from %s:%d :' % self.request.getpeername()
-        # print everything
+        print 'Request from %s:%d :' % self.request.getpeername()
+        print everything
         mJSON = json.loads(everything)
 
         # process the request
@@ -102,9 +103,13 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             toSend['status'] = 'fail'
             toSend['description'] = str(e)
 
-        # except Exception as e:
-        # toSend['status'] = 'error'
-        #     toSend['description'] = str(e)
+        except Exception as e:
+            print "ERROR:"
+            print '-'*60
+            traceback.print_exc(file=sys.stdout)
+            print '-'*60
+            toSend['status'] = 'error'
+            toSend['description'] = str(e)
 
         serverLogic.closeConnection()
 
@@ -112,8 +117,8 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         sToSend = json.dumps(toSend)
 
         # debug mode
-        # print 'Response to %s:%d :' % self.request.getpeername()
-        # print sToSend
+        print 'Response to %s:%d :' % self.request.getpeername()
+        print sToSend
         self.request.sendall(sToSend)
 
 

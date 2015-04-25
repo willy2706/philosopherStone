@@ -120,7 +120,7 @@ class ServerDealer():
         '''
         self.servers = servers
 
-    def accept(self, offerToken, inventory, timeout=3):
+    def accept(self, offerToken, inventory, timeout=3.0):
         '''
         Send accept to other server.
 
@@ -128,15 +128,12 @@ class ServerDealer():
         :return: None
         '''
 
-        print 'di dalam foreignOffers.accept'
-
         found = False
         deadServer = False
         theServer = None
 
         # search for offers with offerToken
         for key, record in self.foreignOffers.items():
-            print 'di for loop'
             offers = record['offers']
             if offerToken in offers:
                 # check whether inventory have enough stuff
@@ -144,20 +141,18 @@ class ServerDealer():
 
                 if inventory[offer[2]] < offer[3]:
                     # the number of item in inventory is not enough.
-                    print 'raise sisterexceptions.OfferException("you don''t have enough item %s" %'
                     raise sisterexceptions.OfferException("you don't have enough item %s" %
                                                           helpers.mappingIndexItemToName(offer[2]))
 
                 # send accept to other server
                 toSend = {'method': 'accept',
-                          'offerToken': offerToken}
+                          'offer_token': offerToken}
 
                 try:
                     mJSON = helpers.sendJSON(key[:2], toSend, timeout)
 
                 except:
                     # server is dead
-                    print 'dead server', key[:2]
                     deadServer = True
                     theServer = key[:2]
                     break
@@ -167,16 +162,12 @@ class ServerDealer():
                 res = offers.pop(offerToken)
 
                 if status == 'fail':
-                    print "raise sisterexceptions.OfferException('offer no longer available')"
                     raise sisterexceptions.OfferException('offer no longer available')
                 elif status == 'error':
-                    print "raise sisterexceptions.OfferException(mJSON['description'])"
                     raise sisterexceptions.OfferException(mJSON['description'])
 
                 found = True
                 break
-
-        print 'di luar for loop'
 
         if deadServer:
             self.removeServer(theServer)
@@ -243,6 +234,7 @@ class ServerDealer():
         :return: None
         """
         # remove server
+        print 'remove server', address
         self.servers.remove({'ip': address[0], 'port': address[1]})
 
         # remove all offer with that server

@@ -412,6 +412,7 @@ class SisterServerLogic():
                 raise sisterexceptions.OfferException("you don't have enough item %s" %
                                                       helpers.mappingIndexItemToName(offer[2]))
 
+            offerDetails = offer[:5]
             self.accept(offerToken)
 
         else:

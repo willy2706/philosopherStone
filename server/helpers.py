@@ -98,6 +98,7 @@ def mappingNameItemToIndex(name):
     elif name == 'R41':
         return 9
 
+
 def sendJSON(address, toSend, timeout=None):
     """
     Send JSON to other host and receive a reply.

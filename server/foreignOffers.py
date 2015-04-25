@@ -100,7 +100,7 @@ class ServerDealer():
         -> port: int
     '''
 
-    def __init__(self, myAddress, cacheTimeout=30):
+    def __init__(self, myAddress, cacheTimeout=300):
         '''
         Initiate attributes.
         :param cacheTimeout: int, number of seconds until the local cache times out

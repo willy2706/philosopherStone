@@ -41,6 +41,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
             elif method == 'signup':
                 serverLogic.signup(mJSON['username'], mJSON['password'])
             elif method == 'login':
+                # TODO: waktu disini waktu apa?
                 token, x, y, time = serverLogic.login(mJSON['username'], mJSON['password'])
                 toSend['token'] = token
                 toSend['x'] = x

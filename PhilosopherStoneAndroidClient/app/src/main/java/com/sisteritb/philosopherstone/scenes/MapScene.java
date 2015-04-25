@@ -3,6 +3,7 @@ package com.sisteritb.philosopherstone.scenes;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.CountDownTimer;
+import android.os.SystemClock;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -120,10 +121,9 @@ public class MapScene extends ActionBarActivity {
 
     private void initPlayerInfo(){
         rowEditText.setText(""+GameState.location_y);
-        columnEditText.setText(""+GameState.location_x);
-        Log.d("ui", "Current time millis:" + System.currentTimeMillis()+" Arrived:"+GameState.arrivedTime);
-        if(GameState.arrivedTime > System.currentTimeMillis()){
-            setTimer(System.currentTimeMillis(),GameState.arrivedTime);
+        columnEditText.setText("" + GameState.location_x);
+        if(GameState.arrivedTime > System.currentTimeMillis()+GameState.syncTime){
+            setTimer(System.currentTimeMillis()+GameState.syncTime, GameState.arrivedTime);
         } else {
             arrivedTimeText.setText("You are at row:" + GameState.location_y+" col:"+GameState.location_x);
         }
@@ -224,8 +224,11 @@ public class MapScene extends ActionBarActivity {
 
             if (response != null) {
                 GameState.arrivedTime = response.getTime()*1000;
-                if(GameState.arrivedTime > System.currentTimeMillis()){
-                    setTimer(System.currentTimeMillis(),GameState.arrivedTime);
+                GameState.location_y = y;
+                GameState.location_x = x;
+                Log.d("connection","Move arrive: "+GameState.arrivedTime+" "+ System.currentTimeMillis());
+                if(GameState.arrivedTime > System.currentTimeMillis()+GameState.syncTime){
+                    setTimer(System.currentTimeMillis()+GameState.syncTime,GameState.arrivedTime);
                 } else {
                     arrivedTimeText.setText("You are at row:" + GameState.location_y+" col:"+GameState.location_x);
                 }

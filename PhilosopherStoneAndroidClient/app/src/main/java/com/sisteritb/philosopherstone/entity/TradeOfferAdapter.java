@@ -8,6 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,20 +54,20 @@ public class TradeOfferAdapter extends ArrayAdapter<TradeOffer> {
                 v = inflater.inflate(R.layout.list_tradebox_item, null);
             }
 
-            TextView offerItemText = (TextView) v.findViewById(R.id.tradeBoxOfferItemText);
             TextView offerItemAmountText = (TextView) v.findViewById(R.id.tradeBoxOfferItemAmountText);
-            TextView demandItemText = (TextView) v.findViewById(R.id.tradeBoxDemandItemText);
             TextView demandAmountItemText = (TextView) v.findViewById(R.id.tradeBoxDemandItemAmountText);
+            ImageView offerItemImage = (ImageView) v.findViewById(R.id.tradeBoxOfferImageView);
+            ImageView demandItemImage = (ImageView) v.findViewById(R.id.tradeBoxDemandImageView);
             Button tradeBoxButton = (Button) v.findViewById(R.id.tradeBoxButton);
 
-            if (offerItemText != null) {
-                offerItemText.setText("" + offer.offeredItem);
+            if (offerItemImage != null) {
+                offerItemImage.setImageResource(itemIdToResourceId(offer.offeredItem));
             }
             if (offerItemAmountText != null) {
                 offerItemAmountText.setText("" + offer.offeredAmmount);
             }
-            if (demandItemText != null) {
-                demandItemText.setText("" + offer.demandedItem);
+            if (demandItemImage != null) {
+                demandItemImage.setImageResource(itemIdToResourceId(offer.demandedItem));
             }
             if (demandAmountItemText != null) {
                 demandAmountItemText.setText("" + offer.demandedAmmount);
@@ -110,6 +111,23 @@ public class TradeOfferAdapter extends ArrayAdapter<TradeOffer> {
             }
         }
         return v;
+    }
+
+    private int itemIdToResourceId(long id){
+        int itemId = (int) id;
+        switch (itemId){
+            case 0: return R.drawable.honey;
+            case 1: return R.drawable.herbs;
+            case 2: return R.drawable.clay;
+            case 3: return R.drawable.mineral;
+            case 4: return R.drawable.potion;
+            case 5: return R.drawable.incense;
+            case 6: return R.drawable.gems;
+            case 7: return R.drawable.life_elixir;
+            case 8: return R.drawable.mana_crystal;
+            case 9: return R.drawable.philosopher_stone;
+            default: return R.drawable.honey;
+        }
     }
 
     private void buyItem(TradeOffer offer){

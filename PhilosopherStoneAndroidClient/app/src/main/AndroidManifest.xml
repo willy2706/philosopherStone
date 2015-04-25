@@ -44,14 +44,6 @@
                 android:value="com.sisteritb.philosopherstone.scenes.MapScene" />
         </activity>
         <activity
-            android:name=".scenes.MixItemScene"
-            android:label="@string/title_activity_mix_item_scene"
-            android:parentActivityName=".scenes.MapScene" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.sisteritb.philosopherstone.scenes.MapScene" />
-        </activity>
-        <activity
             android:name=".scenes.TradeboxScene"
             android:label="@string/title_activity_tradebox_scene"
             android:parentActivityName=".scenes.MapScene" >

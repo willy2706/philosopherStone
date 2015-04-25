@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 public class JsonSocket {
     private static final int CHUNK_SIZE = 1024;
@@ -59,8 +60,13 @@ public class JsonSocket {
             if(storedBuffer.length() == start){
 
                 byte[] buffer = new byte[CHUNK_SIZE];
-                int bufferSize = in.read(buffer);
-                if (bufferSize > 0) storedBuffer.append(new String(buffer));
+                try {
+                    int bufferSize = in.read(buffer);
+                    if (bufferSize > 0) storedBuffer.append(new String(buffer));
+                }catch (SocketTimeoutException ex){
+                    Log.d("connection","Time out reading");
+                    throw new IOException();
+                }
 
             } else {
 
@@ -82,8 +88,13 @@ public class JsonSocket {
             if(storedBuffer.length() == end){
 
                 byte[] buffer = new byte[CHUNK_SIZE];
-                int bufferSize = in.read(buffer);
-                if (bufferSize > 0) storedBuffer.append(new String(buffer));
+                try {
+                    int bufferSize = in.read(buffer);
+                    if (bufferSize > 0) storedBuffer.append(new String(buffer));
+                } catch (SocketTimeoutException ex){
+                    Log.d("connection","Time out reading");
+                    throw new IOException();
+                }
 
             } else {
 

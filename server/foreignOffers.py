@@ -34,6 +34,7 @@ class OffersFinder():
         @returns map addressItem (ip:string, port:int, item:int) @ map
             -> lastUpdate: timestamp
             -> offers: map offerToken @ [offeredItem, n1, demandedItem, n2, availability]
+            , list of address (ip, port)
         """
 
         # create many TCP sockets to addresses and run each with it's own thread
@@ -79,7 +80,7 @@ class OffersFinder():
 
         offers = mJSON['offers']
 
-        # convert back to our offer representation and update ofers
+        # convert back to our offer representation and update offers
         ref = self.offers[(address) + (item,)] = {}
 
         ref['lastUpdate'] = helpers.getCurrentTime()
@@ -127,8 +128,15 @@ class ServerDealer():
         :return: None
         '''
 
+        print 'di dalam foreignOffers.accept'
+
+        found = False
+        deadServer = False
+        theServer = None
+
         # search for offers with offerToken
         for key, record in self.foreignOffers.items():
+            print 'di for loop'
             offers = record['offers']
             if offerToken in offers:
                 # check whether inventory have enough stuff
@@ -136,8 +144,9 @@ class ServerDealer():
 
                 if inventory[offer[2]] < offer[3]:
                     # the number of item in inventory is not enough.
+                    print 'raise sisterexceptions.OfferException("you don''t have enough item %s" %'
                     raise sisterexceptions.OfferException("you don't have enough item %s" %
-                                                          self.mappingIndexItemToName(offer[2]))
+                                                          helpers.mappingIndexItemToName(offer[2]))
 
                 # send accept to other server
                 toSend = {'method': 'accept',
@@ -148,20 +157,30 @@ class ServerDealer():
 
                 except:
                     # server is dead
-                    self.removeServer(key[:2])
-                    raise sisterexceptions.OfferException('offer server is dead')
+                    print 'dead server', key[:2]
+                    deadServer = True
+                    theServer = key[:2]
+                    break
 
                 status = mJSON['status']
 
                 res = offers.pop(offerToken)
 
                 if status == 'fail':
+                    print "raise sisterexceptions.OfferException('offer no longer available')"
                     raise sisterexceptions.OfferException('offer no longer available')
                 elif status == 'error':
+                    print "raise sisterexceptions.OfferException(mJSON['description'])"
                     raise sisterexceptions.OfferException(mJSON['description'])
 
                 found = True
                 break
+
+        print 'di luar for loop'
+
+        if deadServer:
+            self.removeServer(theServer)
+            raise sisterexceptions.OfferException('offer server is dead')
 
         if not found:
             raise sisterexceptions.OfferException('offer not found')
@@ -182,10 +201,11 @@ class ServerDealer():
         res = []
 
         for address in self.servers:
-            if address == self.myAddress:
+            addressItem = (address.get('ip'), address.get('port'), item)
+
+            if addressItem[:2] == self.myAddress:
                 continue
 
-            addressItem = (address.get('ip'), address.get('port'), item)
             record = self.foreignOffers.get(addressItem)
             hit = False
 

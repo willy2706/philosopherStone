@@ -25,8 +25,8 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
                 break
 
         # debug
-        print 'Request from %s:%d :' % self.request.getpeername()
-        print everything
+        # print 'Request from %s:%d :' % self.request.getpeername()
+        # print everything
         mJSON = json.loads(everything)
 
         # process the request
@@ -112,8 +112,8 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         sToSend = json.dumps(toSend)
 
         # debug mode
-        print 'Response to %s:%d :' % self.request.getpeername()
-        print sToSend
+        # print 'Response to %s:%d :' % self.request.getpeername()
+        # print sToSend
         self.request.sendall(sToSend)
 
 

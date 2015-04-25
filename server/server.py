@@ -7,8 +7,8 @@ import sister
 import helpers
 import sisterexceptions
 
-
 class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
+
     def handle(self):
         """
         Main handle method.
@@ -18,6 +18,7 @@ class ThreadedSisterRequestHandler(SocketServer.BaseRequestHandler):
         everything = ''
 
         while True:
+            self.request.settimeout(3)
             data = self.request.recv(4096)
             everything += data
             if helpers.containsValidJSON(everything):

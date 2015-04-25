@@ -14,7 +14,7 @@ import org.json.simple.parser.ParseException;
  */
 public class LoginResponse extends Response{
     private final String token;
-    private final long x, y, time;
+    private final long x, y, time, syncTime;
 
     public LoginResponse(String jsonString) throws ParseException, ResponseFailException, ResponseErrorException {
         super(jsonString);
@@ -23,6 +23,7 @@ public class LoginResponse extends Response{
         x = (long) responseJson.get("x");
         y = (long) responseJson.get("y");
         time = (long) responseJson.get("time");
+        syncTime = (long) responseJson.get("serverTime");
     }
 
     /**
@@ -52,5 +53,8 @@ public class LoginResponse extends Response{
     public long getTime() {
         return time;
     }
-    
+
+    public long getSyncTime(){
+        return syncTime;
+    }
 }

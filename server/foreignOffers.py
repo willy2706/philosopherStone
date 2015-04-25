@@ -154,7 +154,7 @@ class ServerDealer():
                 # send accept to other server
                 toSend = {'method': 'accept',
                           'offerToken': offerToken}
-                
+
                 mJSON = helpers.sendJSON(key[:2], toSend, timeout)
 
                 status = mJSON['status']

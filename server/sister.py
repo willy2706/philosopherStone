@@ -46,7 +46,7 @@ class SisterServerLogic():
                       "R14 INT UNSIGNED NOT NULL DEFAULT 0, R21 INT UNSIGNED NOT NULL DEFAULT 0, R22 INT UNSIGNED NOT NULL DEFAULT 0, "
                       "R23 INT UNSIGNED NOT NULL DEFAULT 0, R31 INT UNSIGNED NOT NULL DEFAULT 0, R32 INT UNSIGNED NOT NULL DEFAULT 0, "
                       "R41 INT UNSIGNED NOT NULL DEFAULT 0, X INT NOT NULL DEFAULT 0, Y INT NOT NULL DEFAULT 0, "
-                      "action_time INT UNSIGNED NOT NULL DEFAULT 0, PRIMARY KEY(username))")
+                      "action_time INT UNSIGNED NOT NULL DEFAULT 0, last_field INT UNSIGNED, PRIMARY KEY(username))")
             c.execute("CREATE TABLE IF NOT EXISTS offers (offer_token VARCHAR(255), username VARCHAR(255) NOT NULL, "
                       "offered_item INT NOT NULL, num_offered_item INT NOT NULL, demanded_item INT NOT NULL, "
                       "num_demanded_item INT NOT NULL, availability TINYINT NOT NULL, PRIMARY KEY(offer_token), "
@@ -229,25 +229,24 @@ class SisterServerLogic():
         username = self.getNameByToken(userToken)
 
         if x < 0 or x >= self.gameMap.get('width') or y < 0 or y >= self.gameMap.get('height'):
-            raise sisterexceptions.MoveException('position out of bounds')
+            raise sisterexceptions.ActionException('position out of bounds')
 
         record = self.getRecordByName(username)
         prevX = record.get('x')
         prevY = record.get('y')
 
         if prevX == x and prevY == y:
-            raise sisterexceptions.MoveException('invalid move')
+            raise sisterexceptions.ActionException('invalid move')
 
         currTime = helpers.getCurrentTime()
         if record.get('actionTime') > currTime:
-            raise sisterexceptions.MoveException('you are still moving')
+            raise sisterexceptions.ActionException('you are still moving')
 
         # time in seconds
-        eachStep = 1
+        eachStep = 10
         timeNeeded = (abs(prevX - x) + abs(prevY - y)) * eachStep
 
         unixTime = currTime + timeNeeded
-        self.actionTime = unixTime
         self.updateRecord(username, {'x': x, 'y': y, 'actionTime': unixTime})
         return unixTime
 
@@ -265,15 +264,25 @@ class SisterServerLogic():
         mRecord = self.getRecordByName(username)
 
         if mRecord.get('actionTime') > helpers.getCurrentTime():
-            raise sisterexceptions.MoveException('you are still moving')
+            raise sisterexceptions.ActionException('you are still moving')
 
-        x = mRecord.get('x')
-        y = mRecord.get('y')
-        nameItem = self.gameMap.get('map')[x][y]
-        index = self.mappingNameItemToIndex(nameItem)
-        mRecord['inventory'][index] += 1
+        curX = mRecord.get('x')
+        curY = mRecord.get('y')
+        pos = mRecord.get('lastField')
+        if pos:
+            width = self.gameMap.get('width')
+            x = pos % width
+            y = pos / width
+            if x == curX and y == curY:
+                raise sisterexceptions.ActionException('you already took that item')
 
-        self.updateField(username, mRecord)
+        nameItem = self.gameMap.get('map')[curX][curY]
+        index = helpers.mappingNameItemToIndex(nameItem)
+        inventory = mRecord.get('inventory')
+        inventory[index] += 1
+
+        self.updateRecord(username, {'inventory': inventory, 'lastField': curY*width + curX})
+        return index
 
 
     """
@@ -531,6 +540,7 @@ class SisterServerLogic():
         record['password'] = res[1]
         record['inventory'] = [res[i] for i in range(2, 12)]
         record['actionTime'] = res[14]
+        record['lastField'] = res[15]
         return record
 
     def setLogin(self, token, username):
@@ -554,16 +564,20 @@ class SisterServerLogic():
         args = []
         for key, val in updated.items():
             if key == 'x':
-                query += 'x = ?, '
-                args.append(updated.get('x'))
+                query += 'X = ?, '
+                args.append(val)
 
             elif key == 'y':
-                query += 'y = ?, '
-                args.append(updated.get('y'))
+                query += 'Y = ?, '
+                args.append(val)
 
             elif key == 'actionTime':
-                query += 'actionTime = ?, '
-                args.append(updated.get('actionTime'))
+                query += 'action_time = ?, '
+                args.append(val)
+
+            elif key == 'lastField':
+                query += 'last_field = ?, '
+                args.append(val)
 
             elif key == 'inventory':
                 idx = 0
@@ -576,8 +590,8 @@ class SisterServerLogic():
             # no need to do anything
             return
 
-        query = query[:-1]
-        query += 'WHERE username = ?'
+        query = 'UPDATE users SET ' + query[:-2] + ' WHERE username = ?'
+        print 'updateQuery:', query
         args.append(username)
 
         # insert into the database
@@ -709,5 +723,3 @@ class SisterServerLogic():
         conn = getattr(threadLocal, 'conn', None)
         if conn:
             conn.close()
-
-        print "Local thread", threadLocal

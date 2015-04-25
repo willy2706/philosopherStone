@@ -35,7 +35,7 @@ class SisterServerLogic():
         Initialize the serverLogic.
         :return: None
         """
-        if os.path.isfile(DATABASE_FILE):
+        if not os.path.isfile(DATABASE_FILE):
             # new database
             # database akan otomatis dibikin kalau ga ada
             conn = sqlite3.connect(DATABASE_FILE)
@@ -103,11 +103,12 @@ class SisterServerLogic():
         if mRecord.get('password') != hashlib.md5(password).hexdigest():
             raise sisterexceptions.UsernameException('username/password combination is not found')
 
-        unixTime = mRecord.get('actionTime')
+        actionTime = mRecord.get('actionTime')
+        serverTime = helpers.getCurrentTime()
         token = hashlib.md5(name).hexdigest()
 
         self.setLogin(token, name)
-        return token, mRecord.get('x'), mRecord.get('y'), unixTime
+        return token, mRecord.get('x'), mRecord.get('y'), actionTime, serverTime
 
     def getInventory(self, userToken):
         """
@@ -141,9 +142,9 @@ class SisterServerLogic():
 
         mInventory = record.get('inventory')
 
-        if mInventory.get(item1) < 3:
+        if mInventory[item1] < 3:
             raise sisterexceptions.MixtureException('first item is not enough')
-        if mInventory.get(item2) < 3:
+        if mInventory[item2] < 3:
             raise sisterexceptions.MixtureException('second item is not enough')
 
         # get the id of the resulting item
@@ -269,8 +270,8 @@ class SisterServerLogic():
         curX = mRecord.get('x')
         curY = mRecord.get('y')
         pos = mRecord.get('lastField')
+        width = self.gameMap.get('width')
         if pos:
-            width = self.gameMap.get('width')
             x = pos % width
             y = pos / width
             if x == curX and y == curY:
@@ -281,7 +282,7 @@ class SisterServerLogic():
         inventory = mRecord.get('inventory')
         inventory[index] += 1
 
-        self.updateRecord(username, {'inventory': inventory, 'lastField': curY*width + curX})
+        self.updateRecord(username, {'inventory': inventory, 'lastField': curY * width + curX})
         return index
 
 
@@ -339,8 +340,8 @@ class SisterServerLogic():
         username = self.getNameByToken(userToken)
 
         # get local server offers
-        res = [tuple(val[:-1]) + (key,) for key, val in self.getAllOffers().items()
-               if val[0] == item and val[-1] != username]
+        res = [tuple(val[:-1]) + (key,) for offer in self.getAllOffers()
+               if offer[0] == item and offer[-1] != username]
 
         # get foreign servers offers
         try:
@@ -362,8 +363,8 @@ class SisterServerLogic():
         """
         self.validateIndexItem(item)
 
-        # ASSUME only return available offers
-        return tuple(row for row in self.getAllOffers() if row[0] == item and row[4])
+        # only return available offers
+        return tuple(row[:5] for row in self.getAllOffers() if row[0] == item and row[4])
 
     def sendAccept(self, userToken, offerToken):
         """
@@ -690,14 +691,15 @@ class SisterServerLogic():
     def getAllOffers(self):
         """
         Get all local offers.
-        :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken)
+
+        :return: tuple of (offeredItem, n1, demandedItem, n2, availability, offerToken, username)
         """
 
         conn = self.getConnection()
         c = conn.cursor()
         res = c.execute("SELECT * FROM offers")
 
-        return tuple((row[2], row[3], row[4], row[5], row[6] == 1, row[0]) for row in res)
+        return tuple((row[2], row[3], row[4], row[5], row[6] == 1, row[0], row[1]) for row in res)
 
     def getConnection(self):
         """

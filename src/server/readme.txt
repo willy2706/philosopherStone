@@ -27,8 +27,8 @@ gameMap:
 
 Design database:
 ----------------
-users = (<u>username</u>, password, R11, R12, R13, R14, R21, R22, R23, R31, R32, R33, R41, x, y)
-offers = (<u>offer_token</u>, offered_item, num_offered_item, demanded_item, num_demanded_item)
+users = (<u>username</u>, password, R11, R12, R13, R14, R21, R22, R23, R31, R32, R33, R41, x, y, action_time, last_field)
+offers = (<u>offer_token</u>, username, offered_item, num_offered_item, demanded_item, num_demanded_item, availability)
 
 camelCase:
 ----------
